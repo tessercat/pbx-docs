@@ -47,28 +47,28 @@ From
     apt install gnupg2 wget lsb-release
     wget -O - https://files.freeswitch.org/repo/deb/rpi/debian-dev/freeswitch_archive_g0.pub | apt-key add -
     echo "deb http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
-echo "deb-src http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
+    echo "deb-src http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
 
 
-# Build FreeSWITCH.
+# Build FreeSWITCH
 
-Clone current binaries.
+## Clone current binaries
 
     git clone -b $CURRENT --depth=1 https://github.com/tessercat/pbx-$ARCH.git /opt/freeswitch
 
-Install build deps.
+## Install build deps
 
     apt -y update
     apt -y build-dep freeswitch
 
-Clone source.
+## Clone source
 
     cd /usr/local/src
     git clone --depth=1 https://github.com/signalwire/freeswitch.git -bv1.10 freeswitch
     cd freeswitch
     git log
 
-Compile and install.
+## Compile and install
 
     cp /opt/freeswitch/conf/modules.conf .
     ./bootstrap.sh -j
