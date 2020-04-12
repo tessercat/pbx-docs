@@ -33,7 +33,7 @@ From
 [Debian 10 Buster](https://freeswitch.org/confluence/display/FREESWITCH/Debian+10+Buster).
 
     export ARCH=amd64
-    apt install gnupg2 wget lsb-release
+    apt -y install gnupg2 wget lsb-release
     wget -O - https://files.freeswitch.org/repo/deb/debian-release/fsstretch-archive-keyring.asc | apt-key add -
     echo "deb http://files.freeswitch.org/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
     echo "deb-src http://files.freeswitch.org/repo/deb/debian-release/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
@@ -44,7 +44,7 @@ From
 [Raspberry Pi](https://freeswitch.org/confluence/display/FREESWITCH/Raspberry+Pi).
 
     export ARCH=arm32
-    apt install gnupg2 wget lsb-release
+    apt -y install gnupg2 wget lsb-release
     wget -O - https://files.freeswitch.org/repo/deb/rpi/debian-dev/freeswitch_archive_g0.pub | apt-key add -
     echo "deb http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
     echo "deb-src http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
@@ -54,7 +54,7 @@ From
 
 ## Clone current binaries
 
-    git clone -b $CURRENT --depth=1 https://github.com/tessercat/pbx-$ARCH.git /opt/freeswitch
+    git clone -b $CURRENT --depth=1 https://github.com/tessercat/pbx-$ARCH.git /opt/pbx/freeswitch
 
 ## Install build deps
 
@@ -70,19 +70,19 @@ From
 
 ## Compile and install
 
-    cp /opt/freeswitch/conf/modules.conf .
+    cp /opt/pbx/freeswitch/conf/modules.conf .
     ./bootstrap.sh -j
-    ./configure --prefix=/opt/freeswitch --disable-fhs
+    ./configure --prefix=/opt/pbx/freeswitch --disable-fhs
     make
     make install
 
 
 # Snapshot changes
 
-Inspect changes to `/opt/freeswitch`
+Inspect changes to `/opt/pbx/freeswitch`
 and create and push a new version branch.
 
-    cd /opt/freeswitch
+    cd /opt/pbx/freeswitch
     git checkout -b $VERSION
     git add .
     git commit -m "Update to $VERSION."
