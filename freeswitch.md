@@ -8,19 +8,26 @@ for the verto project.
     https://github.com/signalwire/freeswitch/releases
 
 
-# Prep build host
+# Update and reboot build host
 
     ssh root@<build-host> -i <host-private-key>
 
     apt -y update
     apt -y full-upgrade && reboot
+
+
+# Prep to build
+
+Install stuff.
+
     apt -y install git
+
+
+Configure stuff.
+
     update-alternatives --config editor
 
-
-# Prep to build FreeSWITCH
-
-Set version vars
+Set version vars.
 
     export CURRENT=v1.10.X
     export VERSION=v1.10.Y
@@ -34,6 +41,8 @@ From
 
     export ARCH=amd64
     apt -y install gnupg2 wget lsb-release
+
+
     wget -O - https://files.freeswitch.org/repo/deb/debian-release/fsstretch-archive-keyring.asc | apt-key add -
     echo "deb http://files.freeswitch.org/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
     echo "deb-src http://files.freeswitch.org/repo/deb/debian-release/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
@@ -45,6 +54,8 @@ From
 
     export ARCH=arm32
     apt -y install gnupg2 wget lsb-release
+
+
     wget -O - https://files.freeswitch.org/repo/deb/rpi/debian-dev/freeswitch_archive_g0.pub | apt-key add -
     echo "deb http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
     echo "deb-src http://files.freeswitch.org/repo/deb/rpi/debian-dev/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
@@ -89,10 +100,7 @@ and create and push a new version branch.
     git push origin $VERSION
 
 
-# Test and update playbooks
+# Test changes
 
-Update the freeswitch role
-with the new version branch,
-build a call server
-make a few calls
-and push the new version.
+
+# Release changes
