@@ -1,6 +1,5 @@
 Documentation to build
-FreeSWITCH binaries
-for the verto project.
+FreeSWITCH binaries.
 
 
 # Check release notes
@@ -65,7 +64,7 @@ From
 
 ## Clone current binaries
 
-    git clone -b $CURRENT --depth=1 https://github.com/tessercat/verto-$ARCH.git /opt/verto/freeswitch
+    git clone -b $CURRENT --depth=1 https://github.com/tessercat/pbx-$ARCH.git /opt/pbx/freeswitch
 
 ## Install build deps
 
@@ -81,19 +80,19 @@ From
 
 ## Compile and install
 
-    cp /opt/verto/freeswitch/conf/modules.conf .
+    cp /opt/pbx/freeswitch/conf/modules.conf .
     ./bootstrap.sh -j
-    ./configure --prefix=/opt/verto/freeswitch --disable-fhs
+    ./configure --prefix=/opt/pbx/freeswitch --disable-fhs
     make
     make install
 
 
 # Snapshot changes
 
-Inspect changes to `/opt/verto/freeswitch`
+Inspect changes to `/opt/pbx/freeswitch`
 and create and push a new version branch.
 
-    cd /opt/verto/freeswitch
+    cd /opt/pbx/freeswitch
     git checkout -b $VERSION
     git add .
     git commit -m "Update to $VERSION."
