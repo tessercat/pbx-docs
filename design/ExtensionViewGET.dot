@@ -1,0 +1,24 @@
+digraph {
+    label="ExtensionView GET";
+
+    GET[shape="invhouse"];
+
+    404[shape="house"];
+    caller[shape="house"];
+    callee[shape="house"];
+
+    init_session[shape="box"];
+
+    GET -> request_ext_exists;
+
+    request_ext_exists -> init_session[label="yes"];
+    request_ext_exists -> 404[label="no"];
+
+    init_session -> session_has_ext;
+
+    session_has_ext -> request_ext_is_session_ext[label="yes"];
+    session_has_ext -> caller[label="no"];
+
+    request_ext_is_session_ext -> callee[label="yes"];
+    request_ext_is_session_ext -> caller[label="no"];
+}

@@ -1,0 +1,33 @@
+digraph {
+    label="RegisterView POST";
+
+    POST[shape="invhouse"];
+
+    400[shape="house"];
+    GET[shape="house"];
+    GET_ext[shape="house"];
+    unregistered[shape="house"];
+
+    has_session[shape="box"];
+    register[shape="box"];
+    unregister[shape="box"];
+
+    POST -> request_ext_exists;
+
+    request_ext_exists -> has_session[label="yes"];
+    request_ext_exists -> 400[label="no"];
+
+    has_session -> session_has_ext[label="yes"];
+    has_session -> 400[label="no"];
+
+    session_has_ext -> request_ext_is_session_ext[label="yes"];
+    session_has_ext -> register[label="no"];
+
+    request_ext_is_session_ext -> unregister[label="yes"];
+    request_ext_is_session_ext -> register[label="no"];
+
+    unregister -> unregistered;
+
+    register -> GET_ext[label="success"];
+    register -> GET[label="failure"];
+}
