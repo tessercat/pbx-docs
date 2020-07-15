@@ -4,7 +4,7 @@ The project uses the
 [pbx-web](https://github.com/tessercat/pbx-web)
 Django call control server
 and the
-[pbx-clients](https://github.com/tessercat/pbx-clients)
+[pbx-peer](https://github.com/tessercat/pbx-peer)
 JavaScript client
 to provide as simple a
 peer-to-peer WebRTC calling service

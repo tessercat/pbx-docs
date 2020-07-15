@@ -6,7 +6,7 @@ as implemented by the
 [pbx-web](https://github.com/tessercat/pbx-web)
 Django project's `extensions.PeerConsumer` class
 and the
-[pbx-clients](https://github.com/tessercat/pbx-clients)
+[pbx-peer](https://github.com/tessercat/pbx-peer)
 `peer.js` app.
 
 The protocol consists of
