@@ -5,7 +5,6 @@ channels as
 a randomly generated UUID ID
 and a set of clients.
 Channels can be private or public.
-
 Public channels
 are listed on the index page.
 
@@ -25,7 +24,8 @@ a (channel-specific) client ID
 session variable key.
 
 The channel view
-places client ID and password
+places channel ID,
+client ID and password
 in responses,
 and the JavaScript client reads them
 and sends them to FreeSWITCH
@@ -47,11 +47,7 @@ to authenticate the login.
 The auth fragment
 includes configuration
 that allows clients to send messages
-only to a single channel.
-
-Clients `verto.subscribe` to the channel UUID on login
-and send available presence status
-to the channel with `verto.broadcast`.
+only to the channel ID channel.
 
 
 # Channel/client ID and Django sessions
@@ -118,10 +114,14 @@ a custom 404 method
 that returns
 a FreeSWITCH XML fragment.
 
-The `common` app
-detects the custom method
+The `common` app default 404 handler
+detects the custom 404 method
 and returns its result
 instead of the default HTML 404 response.
+
+Request handler class implementations
+return this 404 fragment
+when they raise Django `Http404`.
 
 
 # Verto peer-to-peer message relay

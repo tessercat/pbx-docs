@@ -15,8 +15,9 @@
 # Index
 
 The Index class
-is the WebPack entry point
-and simply imports `webrtc-adapter` 
+is the webpack entry point
+and simply imports
+[`webrtc-adapter`](The WebRTC https://www.npmjs.com/package/webrtc-adapter "WebRTC adapter on npm")
 and creates and connects a Peer object
 on window load
 and disconnects it
@@ -27,15 +28,15 @@ on window unload.
 
 The View class
 provides an interface
-for the client to interact
+for controllers to interact
 with the features of
 the Django `channels` app
 `channel_detail.html` template.
 
-The view provides
+View provides
 channel ID, client ID and password variables
-that controllers use
-to connect the Client,
+that controllers can use
+to connect and authorize the Client,
 as well as
 components defined by the
 [Picnic CSS](https://picnicss.com/)
@@ -43,7 +44,7 @@ library.
 
 - A navbar with three items.
   - A brand logo that links to the index page.
-  - A status method pulled left next to the brand logo
+  - A status menu item pulled left next to the brand logo
     and a method to set its text content.
   - A menu item pulled right
     and a method to fill the menu item
@@ -71,10 +72,7 @@ The methods that populate
 the navbar and modal dialog
 with arbitrary HTML elements
 couple controllers
-(like the Peer)
-to the Picnic CSS library,
-but it's not too painful,
-and I don't see a way to avoid it.
+to the Picnic CSS library.
 
 
 # Peer
@@ -96,7 +94,6 @@ between View and Client classes.
 The Peer class
 implements a simple protocol
 to establish a peer connection.
-
 One peer offers to a connection
 and another accepts.
 
@@ -104,7 +101,7 @@ and another accepts.
 
 To start a new peer connection,
 peers create a Connection object,
-initialize the object's local media stream
+initialize local user media
 (by enumerating and getting local media),
 and send an `offer` message
 directly to another peer.
@@ -112,10 +109,15 @@ directly to another peer.
 If the offering peer receives `close` in response,
 the offering peer closes the Connection object.
 
+The offering peer
+can rescinds its offer
+by closing its Connection object
+and sending `close` to the other peer.
+
 If the offering peer receives `accept` in response,
-the offering peer fully initializes the peer connection
+the offering peer fully opens the peer connection
 by creating an RTCPeerConnection object,
-attaching the peers's handlers to the object's events
+attaching Peer handlers to Connection object events
 and adding local media stream tracks
 to the RTCPeerConnection object.
 
@@ -124,19 +126,6 @@ implementation of perfect negotiation
 handles ICE and SDP negotiation.
 The offering peer
 is the polite peer.
-
-Once the offering peer
-has created and initialized
-a Connection object
-it rescinds its offer
-and/or closes an existing peer connection
-by closing its Connection object
-and sending `close` to the other peer.
-
-Closing a Connection object
-removes the local media stream from the view's srcObject,
-closes local media stream tracks,
-and closes the RTCPeerConnection.
 
 ## Accept
 
@@ -147,15 +136,13 @@ to refuse the offer.
 
 The peer accepts an offer
 by creating a Connection object,
-initializing the object's local media,
+initializing local media,
 sending `accept` to the offering peer
 once local media is ready,
-and immediately initializing the peer connection.
+and opening the connection.
 
-The Connection's
-implementation of perfect negotiation
-handles ICE and SDP negotiation.
-The accepting peer
+In perfect negotiation,
+the accepting peer
 is the impolite peer.
 
 Once the accepting peer
@@ -206,17 +193,48 @@ As of August, 2020,
 rollback in spec and browsers
 is not aligned,
 and not polyfilled
-by the adapter.
+by the WebRTC adapter library.
 
 
-# Client and MyWebSocket
+# Client/MyWebSocket
 
 The Client and MyWebSocket classes
 implement a subset of
 the FreeSWITCH verto endpoint
 JSON-RPC protocol.
 
-TODO
+The Client provides methods to
+connect and disconnect MyWebSocket
+to and from the verto endpoint.
+
+The Client logs in to the verto endpoint on connect,
+sends `verto.subscribe` to the channel UUID
+on successful login,
+and sends its availability to the channel
+via `verto.broadcast`
+on successful subscription
+and on disconnection.
+
+The Client
+provides methods for controllers
+to publish its available/unavailable/absent presence state
+to the channel,
+and provides a method
+to for controllers
+to send messages directly to other Clients.
+
+The verto module
+disconnects idle WebSockets
+after one minute,
+so the Client sends `echo` messages periodically
+to keep the connection alive.
+
+The Client
+manages WebSocket connection state
+by reconnecting immediately on WebSocket disconnection,
+but backing off five seconds on every retry
+until it retries every 30 seconds.
+
 
 ## Signal channel
 
@@ -242,6 +260,7 @@ to the correct peer
 by executing an API command
 that sends the `MESSAGE` body
 directly to the target verto user.
+
 
 ## Channel security
 
