@@ -236,7 +236,38 @@ but backing off five seconds on every retry
 until it retries every 30 seconds.
 
 
-## Signal channel
+# Client ID, session ID and peer ID
+
+The web app models Client objects
+as a server-generated client ID and password.
+Both values are UUID fields.
+
+The web app channel template
+and the JavaScript client View class
+expose client ID as a View object variable,
+and it's used only by Client objects
+as the "login" parameter
+in verto login messages.
+
+The verto module
+requires a UUID session ID
+in all JSON-RPC messages,
+and Client objects
+retrieve session ID
+from `sessionStorage` when created,
+or generate and store
+a new session ID
+if one can't be found in storage.
+
+Peer objects
+expose session ID,
+but not client ID,
+to other peers
+in presence events/messages
+and connection negotiation messages.
+
+
+# Signal channel
 
 The peer-to-peer signal channel
 is implemented using the verto endpoint
@@ -262,7 +293,7 @@ that sends the `MESSAGE` body
 directly to the target verto user.
 
 
-## Channel security
+# Channel security
 
 Clients must know a valid client ID and password
 for a specific channel
