@@ -4,7 +4,7 @@ I'm a cautious FreeSWITCH fanboy.
 FreeSWITCH is messy and complicated,
 it has a steep learning curve,
 and it's not well documented outside of code,
-but Anthony Minnesale is a genius,
+but Anthony Minessale is a genius,
 and he's built the most
 flexible and robust
 open source
@@ -56,6 +56,12 @@ There's no local directory or dialplan config,
 or any config of endpoint modules
 like `mod_sofia` for SIP
 or `mod_verto` for FreeSWITCH's JSON-RPC protocol.
+All such configuration
+is delivered to FreeSWITCH
+by the Django
+[pbx-web](https://github.com/tessercat/pbx-web)
+project `fsapi` app
+and registered request handlers.
 
 I tried Dockerizing FreeSWITCH
 a few years ago,
@@ -69,14 +75,15 @@ I also prefer
 to think of single hosts
 as units of deployment.
 Most managed resources,
-from CPU to hostname,
+from CPU to certs,
 are host-based,
 and adding a layer of abstraction
 like Docker
 to deployment
 seems like a lot of overhead
 for a small-scale,
-single-developer
+single-developer,
+single-host
 project like this.
 
 Since the FreeSWITCH project
@@ -112,14 +119,14 @@ I've been playing with other
 open source,
 self-hostable signal layers
 for the project
-(SIP.js with `mod_sofia`,
+(SIP.js with `mod_sofia` and `mod_valet_parking`,
 Pushpin, nginx nchan and Django channels with Django
 for peer-to-peer WebRTC),
 but I ended up
 wishing that I'd looked more closely
 at verto from the start.
 
-The JavaScript may be ugly,
+The JavaScript might be ugly,
 but I've spent some time in the module itself,
 and it's a lot more like the rest of FreeSWITCH.
 It's messy and complicated,

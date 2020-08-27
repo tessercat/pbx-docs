@@ -17,7 +17,7 @@
 The Index class
 is the webpack entry point
 and simply imports
-[`webrtc-adapter`](The WebRTC https://www.npmjs.com/package/webrtc-adapter "WebRTC adapter on npm")
+[`webrtc-adapter`](https://www.npmjs.com/package/webrtc-adapter "WebRTC adapter on npm")
 and creates and connects a Peer object
 on window load
 and disconnects it
@@ -87,14 +87,14 @@ between View and Client classes.
 - Interacts with the view
   based on input from the Client
   and sets method callbacks on the View
-  that handle offer and accept use input.
+  that handle "offer" and "accept" user input.
 - Manages a single Connection object
   based on Client and View input.
 
 The Peer class
 implements a simple protocol
 to establish a peer connection.
-One peer offers to a connection
+One peer offers a connection
 and another accepts.
 
 ## Offer
@@ -110,7 +110,7 @@ If the offering peer receives `close` in response,
 the offering peer closes the Connection object.
 
 The offering peer
-can rescinds its offer
+can rescind its offer
 by closing its Connection object
 and sending `close` to the other peer.
 
@@ -165,12 +165,13 @@ to implement so-called "perfect negotiation".
 
 The Connection class
 implements perfect negotiation
-as per the spec example at
-https://w3c.github.io/webrtc-pc/#perfect-negotiation-example
-and modified as per the blog post at
-https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
-and as per the Stack Overflow answer at
-https://stackoverflow.com/questions/61956693/webrtc-perfect-negotiation-issues.
+as per the
+[W3C spec example](https://w3c.github.io/webrtc-pc/#perfect-negotiation-example)
+and modified as per this
+[blog post](https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/)
+and this
+[Stack Overflow answer](https://stackoverflow.com/questions/61956693/webrtc-perfect-negotiation-issues)
+from Jan-Ivar Bruaroey.
 
 In perfect negotiation,
 an SDP offer collision occurs
@@ -208,7 +209,7 @@ connect and disconnect MyWebSocket
 to and from the verto endpoint.
 
 The Client logs in to the verto endpoint on connect,
-sends `verto.subscribe` to the channel UUID
+sends `verto.subscribe` to the channel
 on successful login,
 and sends its availability to the channel
 via `verto.broadcast`
@@ -238,33 +239,61 @@ until it retries every 30 seconds.
 
 # Client ID, session ID and peer ID
 
+They're all the same thing.
+
 The web app models Client objects
-as a server-generated client ID and password.
+as a server-generated,
+per-channel client ID and password.
 Both values are UUID fields.
 
 The web app channel template
 and the JavaScript client View class
 expose client ID as a View object variable,
-and it's used only by Client objects
+and it's used by Client objects
 as the "login" parameter
 in verto login messages.
 
 The verto module
-requires a UUID session ID
-in all JSON-RPC messages,
-and Client objects
-retrieve session ID
-from `sessionStorage` when created,
-or generate and store
-a new session ID
-if one can't be found in storage.
+doesn't provide
+a peer-to-peer messaging channel,
+but it's possible to send messages between peers
+addressed by client ID "login" username.
 
-Peer objects
-expose session ID,
-but not client ID,
-to other peers
-in presence events/messages
-and connection negotiation messages.
+(A FreeSWITCH Lua script
+intercepts the `MESSAGE` events
+and forwards them to the target peer
+using the FreeSWITCH `chat` application.)
+
+The verto module
+also requires a UUID `sessid`
+in JSON-RPC messages.
+A client's `sessid`
+is exposed to other clients
+in channel broadcast messages.
+
+(The FreeSWITCH verto JavaScript library
+generates `sessid` and stores it in `localStorage`
+so the library can re-attach channels
+when users reload the browser page,
+for example.)
+
+Since client ID as login username
+must be exposed
+so that FreeSWITCH
+can route peer-to-peer messages
+between clients,
+and since `sessid` is exposed to clients
+in channel broadcast messages,
+I think it makes sense
+to use client ID for both.
+
+Peer objects display
+and send/receive client IDs
+as variable `peerId`
+only as a reminder to myself
+that Peer objects provide
+single simple peer-to-peer
+WebRTC connections.
 
 
 # Signal channel
@@ -275,52 +304,23 @@ is implemented using the verto endpoint
 
 Clients base64-encode message bodies before sending
 and decode upon receipt
-so that the FreeSWITCH chat command
+so that the FreeSWITCH `chat` application
 doesn't change them en route.
 
-The `msg` function
+The verto `msg` function
 generates a `MESSAGE` event
 with `proto` field `verto`
-and `dest_proto` field `GLOBAL`.
+and `dest_proto` field `GLOBAL`
+and sets the `from_user` field
+to the sender's `sessid` client ID.
 
 FreeSWITCH is configured
 to detect `MESSAGE` events
 (via a simple Lua script)
 and delivers the messages
 to the correct peer
-by executing an API command
+by executing a `chat` application
+API command
+in the verto protocol
 that sends the `MESSAGE` body
 directly to the target verto user.
-
-
-# Channel security
-
-Clients must know a valid client ID and password
-for a specific channel
-before logging in to the channel.
-
-The verto module
-requires user configuration
-to specify allowed event channels,
-and since the auth request handler
-adds only the channel UUID
-to allowed event channels,
-logged-in clients
-are able to send messages
-only to clients in a single channel.
-
-The verto module
-disconnects logged-in clients
-when other clients
-attempt to re-use the same auth credentials.
-
-The verto module
-provides no mechanism to disconnect clients,
-so it's not currently possible
-to "kick" clients from a channel.
-
-Once a WebRTC connection is established,
-all sensitive information
-is transmitted directly peer-to-peer,
-and the call server
-has no knowledge of it at all.
