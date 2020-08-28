@@ -1,0 +1,43 @@
+diff --git a/src/mod/endpoints/mod_verto/mod_verto.c b/src/mod/endpoints/mod_verto/mod_verto.c
+index 342ed8b..dd0ee0f 100644
+--- a/src/mod/endpoints/mod_verto/mod_verto.c
++++ b/src/mod/endpoints/mod_verto/mod_verto.c
+@@ -5439,6 +5439,30 @@ SWITCH_STANDARD_API(verto_contact_function)
+ 	return SWITCH_STATUS_SUCCESS;
+ }
+ 
++SWITCH_STANDARD_API(verto_punt_function)
++{
++	char *sessid = (char *) cmd;
++	jsock_t *jsock;
++
++	switch_mutex_lock(verto_globals.jsock_mutex);
++
++	if ((jsock = switch_core_hash_find(verto_globals.jsock_hash, sessid))) {
++		cJSON *params = NULL;
++		cJSON *msg = NULL;
++		msg = jrpc_new_req("verto.punt", NULL, &params);
++		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_WARNING, "%s dropping connection.\n", jsock->uuid_str);
++		switch_core_hash_delete(verto_globals.jsock_hash, jsock->uuid_str);
++		ws_write_json(jsock, &msg, SWITCH_TRUE);
++		cJSON_Delete(msg);
++		jsock->nodelete = 1;
++		jsock->drop = 1;
++		stream->write_function(stream, jsock->uuid_str);
++	}
++
++	switch_mutex_unlock(verto_globals.jsock_mutex);
++
++	return SWITCH_STATUS_SUCCESS;
++}
+ 
+ static switch_call_cause_t verto_outgoing_channel(switch_core_session_t *session,
+ 												  switch_event_t *var_event,
+@@ -6201,6 +6225,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_verto_load)
+ 
+ 	SWITCH_ADD_API(api_interface, "verto", "Verto API", verto_function, "syntax");
+ 	SWITCH_ADD_API(api_interface, "verto_contact", "Generate a verto endpoint dialstring", verto_contact_function, "user@domain");
++	SWITCH_ADD_API(api_interface, "verto_punt", "Punt a verto session", verto_punt_function, "sessid");
+ 	switch_console_set_complete("add verto help");
+ 	switch_console_set_complete("add verto status");
+ 	switch_console_set_complete("add verto xmlstatus");
