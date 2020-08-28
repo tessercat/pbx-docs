@@ -34,7 +34,12 @@ only to other clients of that channel.
 The verto module
 disconnects (`verto.punt`) a logged-in client
 when another client
-re-uses the same auth credentials.
+re-uses the same auth credentials
+*and session ID*,
+but
+[allows new connections](https://github.com/signalwire/freeswitch/issues/571)
+if the session ID is different.
+This seems like a huge security hole to me.
 
 The verto module
 provides no mechanism to disconnect clients,
