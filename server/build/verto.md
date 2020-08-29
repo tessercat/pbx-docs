@@ -1,18 +1,14 @@
-# Login username and session ID constraint
+# Custom verto_punt API command
 
-A Lua hook script
-listens for login events,
+To prevent hackers
+from connecting multiple clients
+with the same username and password
+but different session IDs,
+a Lua hook script
+listens for login events
 and punts sessions
 when login username and session ID
-are not identical.
-
-This prevents hackers
-from connecting multiple clients
-with the same username and password,
-but different session IDs.
-
-
-# Custom FreeSWITCH API verto_punt command
+are different.
 
 ```
 SWITCH_ADD_API(api_interface, "verto_punt", "Punt a verto session", verto_punt_function, "sessid");
