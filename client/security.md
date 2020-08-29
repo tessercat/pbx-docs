@@ -31,21 +31,39 @@ are able to broadcast to a single channel only,
 and can send peer-to-peer messages
 only to other clients of that channel.
 
-The verto module
+By default,
+the verto module
 disconnects (`verto.punt`) a logged-in client
 when another client
 re-uses the same auth credentials
 *and session ID*,
-but
-[allows new connections](https://github.com/signalwire/freeswitch/issues/571)
-if the session ID is different.
-This seems like a huge security hole to me.
+but the module allows new connections
+if username and password are correct
+but the session ID is different.
 
-The verto module
-provides no mechanism to disconnect clients,
-so it's not currently possible
-to "kick/ban" clients from a channel
-unless I hack the `verto.punt` behaviour.
+This allows nefarious actors
+to connect any number of clients
+once login ID and password are known.
+
+Also by default,
+the verto module
+provides no mechanism to disconnect
+logged-in clients.
+
+To prevent misuse
+of such a "multiple registration" scheme,
+I've added a custom `verto_punt` API command
+to the verto module
+and a Lua hook script
+that listens for verto logins
+and punts clients whose
+session ID is not the same as
+their login ID.
+
+This at least allows hackers
+to connect only a single client
+at a time
+per login username and password.
 
 Once a WebRTC connection is established,
 media streams
