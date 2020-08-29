@@ -11,32 +11,11 @@ from connecting multiple clients
 with the same username and password,
 but different session IDs.
 
-    <hook event="CUSTOM" subclass="verto::login" script="login.lua"/>
-
 
 # Custom FreeSWITCH API verto_punt command
 
 ```
-SWITCH_ADD_API(api_interface, "verto_sessions", "List verto sessions", verto_sessions_function, "");
 SWITCH_ADD_API(api_interface, "verto_punt", "Punt a verto session", verto_punt_function, "sessid");
-
-SWITCH_STANDARD_API(verto_sessions_function)
-{
-	verto_profile_t *profile = NULL;
-	jsock_t *jsock;
-
-	switch_mutex_lock(verto_globals.mutex);
-	for(profile = verto_globals.profile_head; profile; profile = profile->next) {
-		switch_mutex_lock(profile->mutex);
-		for (jsock = profile->jsock_head; jsock; jsock = jsock->next) {
-			stream->write_function(stream, "%s\n", jsock->uuid_str);
-		}
-		switch_mutex_unlock(profile->mutex);
-	}
-	switch_mutex_unlock(verto_globals.mutex);
-
-	return SWITCH_STATUS_SUCCESS;
-}
 
 SWITCH_STANDARD_API(verto_punt_function)
 {
