@@ -1,34 +1,42 @@
-# Login username and sessid constraint
+# Login username and session ID constraint
 
-Could this be done
-with the `verto_punt` API command
-and a Lua script
-that listens for login events?
-I think so.
-The script could check
-that login username and sessid are identical
-and call `verto_punt`
-on the connection if they are not.
-If login username and sessid are identical,
-the script could check the output of `verto status`,
-and `verto_punt` the new session
-if a client with login username already exists.
+A Lua hook script
+listens for login events,
+and punts sessions
+when login username and session ID
+are not identical.
+
+This prevents hackers
+from connecting multiple clients
+with the same username and password,
+but different session IDs.
 
     <hook event="CUSTOM" subclass="verto::login" script="login.lua"/>
 
 
-# Punt API command
-
-Add `verto_punt` API command.
-On success,
-the function output is the punted `sessid`
-only because
-it seems
-that the command isn't found
-if the stream isn't written to.
+# Custom FreeSWITCH API verto_punt command
 
 ```
+SWITCH_ADD_API(api_interface, "verto_sessions", "List verto sessions", verto_sessions_function, "");
 SWITCH_ADD_API(api_interface, "verto_punt", "Punt a verto session", verto_punt_function, "sessid");
+
+SWITCH_STANDARD_API(verto_sessions_function)
+{
+	verto_profile_t *profile = NULL;
+	jsock_t *jsock;
+
+	switch_mutex_lock(verto_globals.mutex);
+	for(profile = verto_globals.profile_head; profile; profile = profile->next) {
+		switch_mutex_lock(profile->mutex);
+		for (jsock = profile->jsock_head; jsock; jsock = jsock->next) {
+			stream->write_function(stream, "%s\n", jsock->uuid_str);
+		}
+		switch_mutex_unlock(profile->mutex);
+	}
+	switch_mutex_unlock(verto_globals.mutex);
+
+	return SWITCH_STATUS_SUCCESS;
+}
 
 SWITCH_STANDARD_API(verto_punt_function)
 {
