@@ -178,7 +178,7 @@ an SDP offer collision occurs
 when a peer receives an SDP offer
 while it's generating and sending
 an offer based on its own local stream,
-or when the RTCPeerConnection signaling state
+or while the RTCPeerConnection signaling state
 is not `stable`.
 
 When collisions occur,
@@ -221,7 +221,7 @@ provides methods for controllers
 to publish its available/unavailable/absent presence state
 to the channel,
 and provides a method
-to for controllers
+for controllers
 to send messages directly to other Clients.
 
 The verto module
@@ -312,7 +312,7 @@ generates a `MESSAGE` event
 with `proto` field `verto`
 and `dest_proto` field `GLOBAL`
 and sets the `from_user` field
-to the sender's `sessid` client ID.
+to the sender's login username client ID.
 
 FreeSWITCH is configured
 to detect `MESSAGE` events
