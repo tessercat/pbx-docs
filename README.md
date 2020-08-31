@@ -1,4 +1,4 @@
-Docs for the WebRTC PBX project.
+Docs for the PBX project.
 
 Other PBX project repos:
 
