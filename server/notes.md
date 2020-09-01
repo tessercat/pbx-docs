@@ -137,12 +137,3 @@ using the FreeSWITCH `chat` API command.
 Clients base-64 encode these relayed info messages
 before sending and decode upon receipt
 to avoid corruption by the `chat` command.
-It possible for clients to also encrypt
-these info messages
-using the Web Crypto API,
-but since messages contain only
-peer presence and call control data
-(unless misused),
-they offer no information
-beyond what the call server already knows
-by hosting the web client.
