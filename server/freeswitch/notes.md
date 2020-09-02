@@ -159,6 +159,25 @@ peer-to-peer only
 system.
 
 
+# Event subscriptions
+
+Verto clients can subscribe to FreeSWITCH events
+by setting `enable-fs-events` to `true`
+in verto module config (default is `false`)
+and adding `FSevent` (to receive all events),
+or a specific eventChannel string
+such as `FSevent.custom::verto::login` (for example)
+to `jsonrpc-allowed-event-channels`
+in a user's directory entry.
+
+Once this is in place,
+subscribing to login events (for example)
+on the client side
+is as simple as:
+
+    client.subscribe('FSevent.custom::verto::login');
+
+
 # Module config
 
 At boot,
@@ -200,22 +219,3 @@ should be an exact copy of `switch.conf.xml`
 except for the configuration section name,
 which should be `post_load_switch.conf`.
 I can't figure out why the switch does this.
-
-
-# Event subscriptions
-
-Verto clients can subscribe to FreeSWITCH events
-by setting `enable-fs-events` to `true`
-in verto module config (default is `false`)
-and adding `FSevent` (to receive all events),
-or a specific eventChannel string
-such as `FSevent.custom::verto::login` (for example)
-to `jsonrpc-allowed-event-channels`
-in a user's directory entry.
-
-Once this is in place,
-subscribing to login events (for example)
-on the client side
-is as simple as:
-
-    client.subscribe('FSevent.custom::verto::login');
