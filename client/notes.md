@@ -14,7 +14,7 @@
 
 # Index
 
-The Index class
+The index
 is the webpack entry point
 and simply imports
 [`webrtc-adapter`](https://www.npmjs.com/package/webrtc-adapter "WebRTC adapter on npm")
@@ -67,6 +67,13 @@ library.
   to control its visibility
   and to fill the dialog
   with arbitrary HTML elements.
+- A modal alert dialog
+  that's dismissable only by its close button
+  and a method to set the alert message
+  and show the alert dialog.
+  The show method
+  stores the content of the current nav menu item
+  and the close button restores its previous content.
 
 The methods that populate
 the navbar and modal dialog
@@ -81,9 +88,11 @@ The Peer class
 is a controller
 between View and Client classes.
 
-- Handles presence events
+- Handles websocket connect/disconnect events,
+  channel presence events,
   and peer-to-peer messages
-  received by the Client class.
+  received by the Client class
+  via the websocket.
 - Interacts with the view
   based on input from the Client
   and sets method callbacks on the View
@@ -121,11 +130,8 @@ attaching Peer handlers to Connection object events
 and adding local media stream tracks
 to the RTCPeerConnection object.
 
-The Connection's
-implementation of perfect negotiation
-handles ICE and SDP negotiation.
-The offering peer
-is the polite peer.
+In this implementation of perfect negotiation,
+the offering peer is the polite peer.
 
 ## Accept
 
@@ -142,16 +148,15 @@ once local media is ready,
 and opening the connection.
 
 In perfect negotiation,
-the accepting peer
-is the impolite peer.
+the accepting peer is the impolite peer.
 
 Once the accepting peer
 has accepted an offer
 and initialized the Connection,
-it closes the connection
+either peer can close the connection
 at any time
 by closing the Connection object
-and sending `close` to the offering peer.
+and sending `close` to the other peer.
 
 
 # Connection
@@ -176,10 +181,10 @@ from Jan-Ivar Bruaroey.
 In perfect negotiation,
 an SDP offer collision occurs
 when a peer receives an SDP offer
-while it's generating and sending
-an offer based on its own local stream,
-or while the RTCPeerConnection signaling state
-is not `stable`.
+while the local RTCPeerConnection signaling state
+is not `stable`
+or while the peer is generating and sending
+an SDP offer based on the local media stream,
 
 When collisions occur,
 the impolite peer
@@ -224,8 +229,7 @@ and provides a method
 for controllers
 to send messages directly to other Clients.
 
-The verto module
-disconnects idle WebSockets
+Some browsers disconnect idle WebSockets
 after one minute,
 so the Client sends `echo` messages periodically
 to keep the connection alive.
@@ -241,59 +245,14 @@ until it retries every 30 seconds.
 
 They're all the same thing.
 
-The web app models Client objects
-as a server-generated,
-per-channel client ID and password.
-Both values are UUID fields.
+See the security doc for more information
+on client/session ID identity.
 
-The web app channel template
-and the JavaScript client View class
-expose client ID as a View object variable,
-and it's used by Client objects
-as the "login" parameter
-in verto login messages.
-
-The verto module
-doesn't provide
-a peer-to-peer messaging channel,
-but it's possible to send messages between peers
-addressed by client ID "login" username.
-
-(A FreeSWITCH Lua script
-intercepts the `MESSAGE` events
-and forwards them to the target peer
-using the FreeSWITCH `chat` application.)
-
-The verto module
-also requires a UUID `sessid`
-in JSON-RPC messages.
-A client's `sessid`
-is exposed to other clients
-in channel broadcast messages.
-
-(The FreeSWITCH verto JavaScript library
-generates `sessid` and stores it in `localStorage`
-so the library can re-attach channels
-when users reload the browser page,
-for example.)
-
-Since client ID as login username
-must be exposed
-so that FreeSWITCH
-can route peer-to-peer messages
-between clients,
-and since `sessid` is exposed to clients
-in channel broadcast messages,
-I think it makes sense
-to use client ID for both.
-
-Peer objects display
-and send/receive client IDs
-as variable `peerId`
+I've used variable name `peerId` in the Peer class
 only as a reminder to myself
-that Peer objects provide
-single simple peer-to-peer
-WebRTC connections.
+that Peer objects support
+only one peer-to-peer WebRTC connection
+at a time.
 
 
 # Signal channel
