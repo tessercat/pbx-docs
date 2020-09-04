@@ -177,6 +177,17 @@ This allows nefarious actors
 to connect any number of clients
 once a single client ID and password are known.
 
+I'm not sure how effective
+such a restriction is in practice,
+though,
+since,
+once a channel ID is known,
+there's nothing stopping
+said nefarious actors
+from requesting any number of
+client IDs and passwords
+in different Django session contexts.
+
 Also by default,
 the verto module
 provides no mechanism to disconnect
@@ -220,6 +231,20 @@ could be compromised
 to insert a "man-in-the-middle"
 by anyone with privileged access
 to the service host.
+
+One way to limit
+resources consumed
+by such misuse
+would be to restrict
+the maximum number of connected clients
+per channel.
+
+When clients are unable to join a channel,
+or a mismatch between
+the number of connected peers
+in the client's peer list
+and the total number of connected clients
+could indicate misuse.
 
 Securing messages
 relayed by the service host
