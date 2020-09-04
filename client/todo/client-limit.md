@@ -13,23 +13,14 @@ for every event,
 and the `channels` app
 provides request handlers.
 
-The `channels` app
-Channel model `max_size` field
-limits the number of clients
+The Django `channels` app
+somehow limits the number of clients
 allowed to log in to the channel,
-and the `client_count` field
-tracks the number of clients
-currently logged in to the channel.
-
-The `channels` app
-increments and decrements client count
+somehow tracks the number of clients
+currently logged in to the channel,
+incrementing and decrementing the count
 when it receives requests
 from the scripts.
-
-Since Django request handling
-wraps database transactions,
-changes to Channel object `client count` values
-should be atomic.
 
 Since `mod_verto`
 requests module configuration
@@ -39,8 +30,25 @@ and since no clients are logged in
 when the verto module starts,
 the `channels` app's
 `verto.conf` request handler
-resets client count
-for all Channel objects.
+should somehow reset
+channel client count.
+
+Per-channel client count
+should probably be implemented
+by adding a `connected` field
+to the Client model
+and finding the total number of connected clients
+for a channel
+by querying a count of connected clients
+from the connecting client's Channel object
+before setting the `connected` state
+on the connecting client.
+
+Since Django request handling
+wraps database transactions,
+changes to channel client counts
+should be atomic
+however it's implemented.
 
 ### Login events
 
