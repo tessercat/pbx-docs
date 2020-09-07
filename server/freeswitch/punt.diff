@@ -1,9 +1,38 @@
 diff --git a/src/mod/endpoints/mod_verto/mod_verto.c b/src/mod/endpoints/mod_verto/mod_verto.c
-index 342ed8b..dd0ee0f 100644
+index 342ed8b..1b08317 100644
 --- a/src/mod/endpoints/mod_verto/mod_verto.c
 +++ b/src/mod/endpoints/mod_verto/mod_verto.c
-@@ -5439,6 +5439,30 @@ SWITCH_STANDARD_API(verto_contact_function)
- 	return SWITCH_STATUS_SUCCESS;
+@@ -893,6 +893,7 @@ static switch_bool_t check_auth(jsock_t *jsock, cJSON *params, int *code, char *
+ 	switch_bool_t r = SWITCH_FALSE;
+ 	const char *passwd = NULL;
+ 	const char *login = NULL;
++	const char *sessid = NULL;
+ 	cJSON *json_ptr = NULL;
+ 	char *input = NULL;
+ 	char *a1_hash = NULL;
+@@ -906,6 +907,7 @@ static switch_bool_t check_auth(jsock_t *jsock, cJSON *params, int *code, char *
+ 
+ 	login = cJSON_GetObjectCstr(params, "login");
+ 	passwd = cJSON_GetObjectCstr(params, "passwd");
++	sessid = cJSON_GetObjectCstr(params, "sessid");
+ 
+ 	if (zstr(login)) {
+ 		goto end;
+@@ -918,6 +920,12 @@ static switch_bool_t check_auth(jsock_t *jsock, cJSON *params, int *code, char *
+ 		goto end;
+ 	}
+ 
++	if (zstr(sessid)) {
++		*code = CODE_AUTH_FAILED;
++		switch_snprintf(message, mlen, "Missing sessid");
++		login_fire_custom_event(jsock, params, 0, "Missing sessid");
++		goto end;
++	}
+ 
+ 	if (!strcmp(login, "root") && jsock->profile->root_passwd) {
+ 		if (!(r = !strcmp(passwd, jsock->profile->root_passwd))) {
+@@ -5176,7 +5184,30 @@ SWITCH_STANDARD_API(verto_function)
+ 
  }
  
 +SWITCH_STANDARD_API(verto_punt_function)
@@ -12,7 +41,7 @@ index 342ed8b..dd0ee0f 100644
 +	jsock_t *jsock;
 +
 +	switch_mutex_lock(verto_globals.jsock_mutex);
-+
+ 
 +	if ((jsock = switch_core_hash_find(verto_globals.jsock_hash, sessid))) {
 +		cJSON *params = NULL;
 +		cJSON *msg = NULL;
@@ -31,9 +60,9 @@ index 342ed8b..dd0ee0f 100644
 +	return SWITCH_STATUS_SUCCESS;
 +}
  
- static switch_call_cause_t verto_outgoing_channel(switch_core_session_t *session,
- 												  switch_event_t *var_event,
-@@ -6201,6 +6225,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_verto_load)
+ static void *SWITCH_THREAD_FUNC profile_thread(switch_thread_t *thread, void *obj)
+ {
+@@ -6201,6 +6232,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_verto_load)
  
  	SWITCH_ADD_API(api_interface, "verto", "Verto API", verto_function, "syntax");
  	SWITCH_ADD_API(api_interface, "verto_contact", "Generate a verto endpoint dialstring", verto_contact_function, "user@domain");

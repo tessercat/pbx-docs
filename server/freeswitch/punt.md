@@ -7,8 +7,8 @@ but different session IDs,
 a Lua hook script
 listens for login events
 and punts sessions
-when login username and session ID
-are different.
+when the session ID
+is not the expected value.
 
 ```
 SWITCH_ADD_API(api_interface, "verto_punt", "Punt a verto session", verto_punt_function, "sessid");
@@ -37,4 +37,22 @@ SWITCH_STANDARD_API(verto_punt_function)
 
 	return SWITCH_STATUS_SUCCESS;
 }
+```
+
+Since the verto module
+allows clients to register
+with an empty session ID,
+also require `sessid` in `check_auth`.
+
+```
+	const char *sessid = NULL;
+
+	sessid = cJSON_GetObjectCstr(params, "sessid");
+
+	if (zstr(sessid)) {
+		*code = CODE_AUTH_FAILED;
+		switch_snprintf(message, mlen, "Missing sessid");
+		login_fire_custom_event(jsock, params, 0, "Missing sessid");
+		goto end;
+	}
 ```
