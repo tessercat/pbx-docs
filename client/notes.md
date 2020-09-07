@@ -34,10 +34,6 @@ the Django `channels` app
 `channel_detail.html` template.
 
 View provides
-channel ID, client ID and password variables
-that controllers can use
-to connect and authorize the Client,
-as well as
 components defined by the
 [Picnic CSS](https://picnicss.com/)
 library.
@@ -209,25 +205,55 @@ implement a subset of
 the FreeSWITCH verto endpoint
 JSON-RPC protocol.
 
-The Client provides methods to
-connect and disconnect MyWebSocket
+The client
+provides methods
+to connect and disconnect MyWebSocket
 to and from the verto endpoint.
 
-The Client logs in to the verto endpoint on connect,
+On connect,
+the client generates a per-channel UUID session ID,
+sends the session ID to the service host
+in a separate fetch request
+and receives client ID and password
+login credentials in reply.
+
+On success,
+the client stores the session ID
+in browser `localStorage`
+and sets a two week expiry timestamp
+on the session ID.
+
+The service host
+replies to the auth credential request
+with 404 to indicate session expiry,
+and the client clears its current session ID
+and requests a new one
+in response.
+
+he service host
+replies with 403 on any other error
+and the client stops connecting.
+
+Once session ID, client ID and password are known,
+the client logs in to the verto endpoint,
 sends `verto.subscribe` to the channel
 on successful login,
 and sends its availability to the channel
 via `verto.broadcast`
 on successful subscription
-and on disconnection.
+(and on disconnection).
 
-The Client
+The client
 provides methods for controllers
 to publish its available/unavailable/absent presence state
 to the channel,
 and provides a method
 for controllers
 to send messages directly to other Clients.
+
+Since they're peer-specific,
+all pub/sub methods
+should probably move to the Peer class.
 
 Some browsers disconnect idle WebSockets
 after one minute,
@@ -241,12 +267,9 @@ but backing off five seconds on every retry
 until it retries every 30 seconds.
 
 
-# Client ID, session ID and peer ID
+# Peer ID
 
-They're all the same thing.
-
-See the security doc for more information
-on client/session ID identity.
+It's the client ID.
 
 I've used variable name `peerId` in the Peer class
 only as a reminder to myself

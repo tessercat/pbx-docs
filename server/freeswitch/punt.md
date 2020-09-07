@@ -6,9 +6,11 @@ with the same username and password
 but different session IDs,
 a Lua hook script
 listens for login events
-and punts sessions
-when the session ID
-is not the expected value.
+and sends the events to the web app
+for processing.
+The web app sends `punt` back to the script
+when session ID is not the expected value
+and the script punts the misbehaving client.
 
 ```
 SWITCH_ADD_API(api_interface, "verto_punt", "Punt a verto session", verto_punt_function, "sessid");

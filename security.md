@@ -1,27 +1,6 @@
-# Channel security
+Security notes for the pbx project.
 
-Since username/password are easily discovered,
-nefarious Internet denizens
-can easily re-use
-the pub/sub/peer-to-peer signal channel
-for whatever purpose they devise,
-but hopefully
-I've minimized the possibility
-of bad-faith actors
-interfering with
-the channel layer's intended purpose
-of providing a medium
-to discover other peers
-and negotiate peer-to-peer
-WebRTC voice and video calls
-with them.
-
-I'm sure someone
-with a more malevolent imagination
-will eventually prove me wrong.
-
-
-## General overview
+# Peers client/app security overview
 
 Clients must know a valid
 per-channel login username (client ID) and password
@@ -48,62 +27,53 @@ I assume that private channels
 are essentially inaccessible
 without specific knowledge of their UUID.
 
-The Django `channels` app
-generates new Client objects
-and stores Client IDs
-in per-channel session variables
-when a browser requests a channel page
-for the first time,
-when sessions expire,
-or when the Django session cookie
-is deleted from the browser.
+The peer client
+generates a per-channel UUID session ID,
+stores it locally
+and fetches client ID and password
+from the Django `peers` app
+in a separate request.
 
-The Django `channels` app
-delivers the server-generated Client object
-login username (client ID) and password
-to the JavaScript client
-as values in DOM input elements.
+The Django `peers` app
+provides a per-channel `/peers/<channelId>/sessions` endpoint
+that receives the client-generated session ID
+as a request argument
+and retrieves an existing Client object
+based on session ID
+(if one already exists)
+or creates a new one
+(if it doesn't),
+and returns the Client object's
+session-specific login credentials
+to the requesting client.
+
+Sessions expire after 14 days.
+The expiry is enforced
+by both the JavaScript client
+and the `peers` app.
+
+Since the `peers` app
+places no restriction
+on the creation of new login credentials,
+public channels could easily be misused.
 
 The verto module
 requires user configuration
-to specify allowed event channels per user,
-and the `channels` app
-auth request handler
-adds only the channel UUID
-to the list of allowed event channels,
-so logged-in clients
-are able to broadcast to a single channel only.
+to specify allowed event channels
+and allowed protocol message types
+per user.
+
+Peer client directory users
+are configured to allow logged-in clients
+to send only the subset of verto protocol messages
+(echo, subscribe, publish and info)
+that support peer discovery
+in a single channel
+and peer-to-peer WebRTC connection negotiation
+with other peers in the same channel.
 
 
-## Session/client ID identity
-
-The verto module
-exposes a peer's session ID
-to other peers
-in broadcast messages.
-
-For peer-to-peer messages,
-the verto module
-inserts login username (client ID)
-into the `MESSAGE` event `from_user` field,
-and the target peer receives this value
-in the received event's `msg.from` field.
-
-Since both session ID and client ID
-are known to other peers,
-in this system,
-session ID and client ID
-are the same value.
-
-The system
-also leverages session and client ID identity
-to disable the default verto module behaviour
-of allowing multiple registration
-of clients with the same client ID
-but different session IDs.
-
-
-## Client ID spoofing and XSS injection
+# Client ID spoofing and XSS injection
 
 I've been as careful as I can be
 to ensure that Peer objects
@@ -120,12 +90,12 @@ so the system should offer
 no potential for XSS injection.
 
 
-## Cross-channel peer-to-peer messages
+# Cross-channel peer-to-peer messages
 
 Peer-to-peer messages
 are relayed by the info msg script
 via the verto chat protocol,
-and since the verto chat protocol
+and since the chat protocol
 sends messages to any logged-in client
 without validating
 channel membership,
@@ -160,7 +130,7 @@ and since I don't see the point,
 I haven't done so.
 
 
-## Disable multiple registration
+# Disable multiple registration
 
 By default,
 the verto module
@@ -173,21 +143,6 @@ but the module allows new connections
 if username and password are correct
 but session ID is different.
 
-This allows nefarious actors
-to connect any number of clients
-once a single client ID and password are known.
-
-I'm not sure how effective
-such a restriction is in practice,
-though,
-since,
-once a channel ID is known,
-there's nothing stopping
-said nefarious actors
-from requesting any number of
-client IDs and passwords
-in different Django session contexts.
-
 Also by default,
 the verto module
 provides no mechanism to disconnect
@@ -199,18 +154,54 @@ of the default verto module
 I've added a custom `verto_punt` API command
 to the verto module
 and a Lua hook script
-that listens for verto logins
-and punts clients whose
-session ID is not the same as
-their client ID.
+that listens for successful verto logins
+and POSTs client ID and session ID
+to the `channels` app
+(via the Django project's `/fsapi` endpoint)
+for inspection.
+
+When the `channels` app
+login event request handler
+detects that the client's session ID
+is not the expected value,
+it sends `punt` to the hook script in reply,
+and the hook script punts the client.
+
+Since the verto module
+allows clients to log in
+without supplying a session ID,
+I've also modified the verto module
+to deny login
+to clients that have not supplied a session ID.
 
 This at least allows hackers
 to connect only a single client
 at a time
 per login username and password.
 
+I'm not sure how effective
+such a restriction is in practice,
+though,
+since,
+for the `peers` app in any case,
+once a channel ID is known,
+there's nothing stopping anyone
+from requesting any number of
+client IDs and passwords
+in different session contexts.
 
-## Message relay vulnerability
+One way to limit
+resources consumed
+by such misuse
+would be to restrict
+the maximum number of connected clients
+per channel,
+though filling channels
+would also count as a form of misuse,
+so I'm not sure if it's worth it.
+
+
+# Message relay vulnerability
 
 Peers base-64 encode
 all messages relayed
@@ -232,20 +223,6 @@ to insert a "man-in-the-middle"
 by anyone with privileged access
 to the service host.
 
-One way to limit
-resources consumed
-by such misuse
-would be to restrict
-the maximum number of connected clients
-per channel.
-
-When clients are unable to join a channel,
-or a mismatch between
-the number of connected peers
-in the client's peer list
-and the total number of connected clients
-could indicate misuse.
-
 Securing messages
 relayed by the service host
 with end-to-end encryption
@@ -257,7 +234,7 @@ but which is not available
 to the service host.
 
 
-## Media stream independence
+# Media stream independence
 
 Once a WebRTC connection is established,
 media streams are encrypted

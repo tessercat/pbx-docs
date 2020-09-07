@@ -134,7 +134,7 @@ but the module
 essentially exposes
 the FreeSWITCH event and channel systems
 via a sensible,
-secure,
+(mostly) secure,
 reliable
 and configurable
 JSON-RPC protocol.
@@ -152,11 +152,18 @@ between peers.
 
 For now,
 that's how I've used it here,
-but eventually I'd like to
-integrate the FreeSWITCH conference module
-into the existing
-peer-to-peer only
-system.
+but eventually I'd like to integrate
+the FreeSWITCH conference module
+for some as-yet unknown purpose.
+
+Regarding verto security,
+the only shortcoming I can identify
+is that once username/password credentials are known,
+it's possible to connect any number of clients
+as long as they have different session IDs.
+
+It's also possible to connect a client
+without supplying a session ID at all.
 
 
 # Event subscriptions
