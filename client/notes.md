@@ -263,8 +263,17 @@ to keep the connection alive.
 The Client
 manages WebSocket connection state
 by reconnecting immediately on WebSocket disconnection,
-but backing off five seconds on every retry
-until it retries every 30 seconds.
+but backing off five seconds,
++/- two seconds,
+on every retry
+until it retries every 30 seconds,
+also +/- two seconds.
+
+Randomness in the backoff period
+helps to stagger work on the server
+of handling connections and ping replies
+when FreeSWITCH or the verto endpoint
+restarts with many connected clients.
 
 
 # Peer ID
