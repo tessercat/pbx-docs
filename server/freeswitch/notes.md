@@ -51,7 +51,7 @@ of `/opt`.
 The minimal configuration
 relies heavily on the FreeSWITCH XML curl module
 to fetch dynamic configuration
-from the call control server.
+from a configuration server.
 There's no local directory or dialplan config,
 or any config of endpoint modules
 like `mod_sofia` for SIP

@@ -47,29 +47,37 @@ and returns the Client object's
 session-specific login credentials
 to the requesting client.
 
-Sessions expire after 14 days.
-The expiry is enforced
-by both the JavaScript client
-and the `peers` app.
+The `peers` app
+expires Client objects
+(and their sessions)
+after 14 days.
 
 Since the `peers` app
 places no restriction
 on the creation of new login credentials,
-public channels could easily be misused.
+pub/sub and peer-to-peer message exchange
+could easily be misused
+for purposes other than discovering peers
+and negotiating WebRTC connections between them,
+though anyone who does so
+should consider the fact
+that messages ere encrypted
+only between client and server,
+and could easily be intercepted
+by anyone with privileged access
+to the service host (i.e. me).
 
-The verto module
-requires user configuration
-to specify allowed event channels
-and allowed protocol message types
-per user.
+Verto module user configuration
+specifies allowed event channels
+and allowed verto protocol message types
+per directory user.
 
 Peer client directory users
 are configured to allow logged-in clients
 to send only the subset of verto protocol messages
 (echo, subscribe, publish and info)
 that support peer discovery
-in a single channel
-and peer-to-peer WebRTC connection negotiation
+and WebRTC connection negotiation
 with other peers in the same channel.
 
 
@@ -92,16 +100,23 @@ no potential for XSS injection.
 
 # Cross-channel peer-to-peer messages
 
-Peer-to-peer messages
-are relayed by the info msg script
-via the verto chat protocol,
-and since the chat protocol
-sends messages to any logged-in client
-without validating
-channel membership,
+FreeSWITCH is configured
+to run a hook script
+to relay `verto.info` `msg` protocol messages
+to any logged-in verto client
+without validating channel membership.
+
+Therefore,
 it's possible for clients
-to send messages
+to send peer-to-peer messages
 to clients in other channels.
+
+(It's not possible,
+however,
+for clients to subscribe to events
+broadcast from other channels
+nor to broadcast messages
+to clients in other channels.)
 
 Since the address space of UUIDs is so large
 and presumably random,
@@ -141,7 +156,7 @@ re-uses the same auth credentials
 *and session ID*,
 but the module allows new connections
 if username and password are correct
-but session ID is different.
+but session ID is different or missing.
 
 Also by default,
 the verto module
@@ -217,7 +232,7 @@ are "end-to-end encrypted",
 the message channel
 is encrypted only between peers
 and the service host,
-and ICE and SDP messages
+and WebRTC ICE and SDP messages
 could be compromised
 to insert a "man-in-the-middle"
 by anyone with privileged access
@@ -247,3 +262,18 @@ by the service host is compromised,
 I don't see how media streams
 can be compromised
 except at the peer endpoints themselves.
+
+
+# Protected endpoints
+
+The Django app
+exposes `/fsapi` and `/metrics` endpoints
+only to requests from `localhost` processes.
+All other endpoints are available
+to non-localhost clients.
+
+A custom Django middleware
+returns the `common` app's 404 page
+when it processes requests
+for these protected endpoints
+from non-localhost clients.

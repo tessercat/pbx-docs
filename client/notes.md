@@ -1,6 +1,7 @@
 # Features
 
-- Reconnects on WebSocket disconnection with backoff on retry.
+- Reconnects on WebSocket disconnection
+  with randomized backoff on retry.
 - Logs in on WebSocket connection.
 - Subscribes to receive
   the channel's presence events
@@ -195,7 +196,12 @@ As of August, 2020,
 rollback in spec and browsers
 is not aligned,
 and not polyfilled
-by the WebRTC adapter library.
+by the WebRTC adapter library,
+so I'm guessing that
+the rollback tweaks
+suggested by Jan-Ivar Bruaroey
+will be required
+for quite a while longer.
 
 
 # Client/MyWebSocket
@@ -219,20 +225,22 @@ login credentials in reply.
 
 On success,
 the client stores the session ID
-in browser `localStorage`
-and sets a two week expiry timestamp
-on the session ID.
+in browser `localStorage`.
 
 The service host
 replies to the auth credential request
-with 404 to indicate session expiry,
-and the client clears its current session ID
-and requests a new one
-in response.
+with 404 to indicate session expiry.
 
-he service host
-replies with 403 on any other error
-and the client stops connecting.
+When it receives 404 in reply,
+the client requests new login credentials
+by clearing its current session ID,
+generating a new one,
+and sending it to the channel's `sessions` endpoint.
+
+The client halts
+when the service host
+replies with 403
+or any other non-ok status code.
 
 Once session ID, client ID and password are known,
 the client logs in to the verto endpoint,
@@ -260,6 +268,12 @@ after one minute,
 so the Client sends `echo` messages periodically
 to keep the connection alive.
 
+Some browsers fail to send echo messages
+when the client runs in a background tab,
+so the client halts
+when it fails to ping the endpoint
+before the browser times out the connection.
+
 The Client
 manages WebSocket connection state
 by reconnecting immediately on WebSocket disconnection,
@@ -270,8 +284,8 @@ until it retries every 30 seconds,
 also +/- two seconds.
 
 Randomness in the backoff period
-helps to stagger work on the server
-of handling connections and ping replies
+helps stagger the work of handling
+connection requests and ping replies
 when FreeSWITCH or the verto endpoint
 restarts with many connected clients.
 
