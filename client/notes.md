@@ -47,13 +47,10 @@ library.
     and a method to fill the menu item
     with arbitrary HTML elements.
 - A video element
-  that fills the document window
-  when no connection is active
-  (using the "cover" object fit style),
-  but is scaled horizontally and vertically
+  scaled horizontally and vertically
   with a black background
   (using the "contain" object fit style)
-  when a connection is active.
+  and methods to show and hide it.
 - An activity watcher on the document
   that hides the navbar when a connection is active
   but no mouse or touch activity is detected,
@@ -69,8 +66,9 @@ library.
   and a method to set the alert message
   and show the alert dialog.
   The show method
-  stores the content of the current nav menu item
-  and the close button restores its previous content.
+  stores current modal content
+  and optionally restores it
+  when the alert is dismissed.
 
 The methods that populate
 the navbar and modal dialog
@@ -269,7 +267,8 @@ so the Client sends `echo` messages periodically
 to keep the connection alive.
 
 Some browsers fail to send echo messages
-when the client runs in a background tab,
+when the browser rund in the background
+or when the device sleeps,
 so the client halts
 when it fails to ping the endpoint
 before the browser times out the connection.
