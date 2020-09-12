@@ -60,8 +60,9 @@ raises 404 when no request handler
 matches the request's POST data.
 
 Handler objects raise 404
-when they raise `ValueError`
-when expected keys are missing from POST data,
+when they raise `KeyError` or `ValueError`
+when expected keys or values
+are missing from POST data,
 or when they explicitly raise 404
 due to some other error condition.
 

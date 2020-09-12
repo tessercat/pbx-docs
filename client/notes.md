@@ -229,16 +229,20 @@ The service host
 replies to the auth credential request
 with 404 to indicate session expiry.
 
-When it receives 404 in reply,
+When it receives 404 in reply
+to its first request,
 the client requests new login credentials
 by clearing its current session ID,
 generating a new one,
 and sending it to the channel's `sessions` endpoint.
 
 The client halts
-when the service host
-replies with 403
-or any other non-ok status code.
+after the first session request
+if it receices any non-ok status code
+except 404,
+and on any non-ok status code
+on its second request
+after receiving 404.
 
 Once session ID, client ID and password are known,
 the client logs in to the verto endpoint,
@@ -261,21 +265,10 @@ Since they're peer-specific,
 all pub/sub methods
 should probably move to the Peer class.
 
-Some browsers disconnect idle WebSockets
-after one minute,
-so the Client sends `echo` messages periodically
-to keep the connection alive.
-
-Some browsers fail to send echo messages
-when the browser rund in the background
-or when the device sleeps,
-so the client halts
-when it fails to ping the endpoint
-before the browser times out the connection.
-
 The Client
 manages WebSocket connection state
-by reconnecting immediately on WebSocket disconnection,
+by reconnecting immediately
+on WebSocket disconnection,
 but backing off five seconds,
 +/- two seconds,
 on every retry
@@ -287,6 +280,54 @@ helps stagger the work of handling
 connection requests and ping replies
 when FreeSWITCH or the verto endpoint
 restarts with many connected clients.
+
+All browsers I've tested
+disconnect idle WebSockets
+after one minute,
+so the Client sends `echo` messages periodically
+to keep the connection alive.
+
+Some browsers slow or halt timers
+when the page is in a background tab,
+so when the browser runs in the background
+or when the device sleeps,
+it fails to send echo messages
+before the WebSocket times out.
+
+This happens in Chromium-based browsers on Android,
+but I haven't noticed it
+in desktop systems,
+so I assume it's a feature
+intended to preserve battery life.
+It's possible to work around it
+with Web Workers,
+but I haven't done so.
+
+In fact,
+since the client
+reconnects WebSockets on disconnect,
+but timer slowdown stops the echoes
+that keep it alive,
+I've encouraged this behaviour
+by halting reconnect
+in situations where the client
+has failed to send echo
+before the browser
+disconnects its WebSocket.
+
+The only mitigation I've added
+is to send echo immediately 
+when the window gains focus
+to avoid timing out
+in situations where
+the phone has gone to sleep
+for a little while
+but the person using it
+wakes it up
+before the WebSocket times out
+because they're expecting
+or about to make
+a call.
 
 
 # Peer ID

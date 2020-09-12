@@ -58,14 +58,7 @@ on the creation of new login credentials,
 pub/sub and peer-to-peer message exchange
 could easily be misused
 for purposes other than discovering peers
-and negotiating WebRTC connections between them,
-though anyone who does so
-should consider the fact
-that messages ere encrypted
-only between client and server,
-and could easily be intercepted
-by anyone with privileged access
-to the service host (i.e. me).
+and negotiating WebRTC connections between them.
 
 Verto module user configuration
 specifies allowed event channels
