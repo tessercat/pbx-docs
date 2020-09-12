@@ -110,11 +110,12 @@ initialize local user media
 and send an `offer` message
 directly to another peer.
 
-If the offering peer receives `close` in response,
-the offering peer closes the Connection object.
+When the offering peer receives `close` in response,
+the offering peer closes its Connection object.
 
 The offering peer
 can rescind its offer
+before the other peer accepts
 by closing its Connection object
 and sending `close` to the other peer.
 
@@ -125,8 +126,9 @@ attaching Peer handlers to Connection object events
 and adding local media stream tracks
 to the RTCPeerConnection object.
 
-In this implementation of perfect negotiation,
-the offering peer is the polite peer.
+The offering peer is
+perfect negotiation's
+polite peer.
 
 ## Accept
 
@@ -142,15 +144,13 @@ sending `accept` to the offering peer
 once local media is ready,
 and opening the connection.
 
-In perfect negotiation,
-the accepting peer is the impolite peer.
+The accepting peer
+perfect negotiation's
+impolite peer.
 
-Once the accepting peer
-has accepted an offer
-and initialized the Connection,
-either peer can close the connection
+Either peer can close the connection
 at any time
-by closing the Connection object
+by closing its Connection object
 and sending `close` to the other peer.
 
 
@@ -207,12 +207,10 @@ for quite a while longer.
 The Client and MyWebSocket classes
 implement a subset of
 the FreeSWITCH verto endpoint
-JSON-RPC protocol.
+JSON-RPC protocol
+and manage its WebSocket transport.
 
-The client
-provides methods
-to connect and disconnect MyWebSocket
-to and from the verto endpoint.
+## Session ID
 
 On connect,
 the client generates a per-channel UUID session ID,
@@ -226,44 +224,45 @@ the client stores the session ID
 in browser `localStorage`.
 
 The service host
-replies to the auth credential request
-with 404 to indicate session expiry.
+indicates session expiry.
+by sending 404 in reply
+to the auth credential request.
 
 When it receives 404 in reply
 to its first request,
 the client requests new login credentials
-by clearing its current session ID,
-generating a new one,
-and sending it to the channel's `sessions` endpoint.
+by clearing its current session ID
+and generating and sending a new one.
 
 The client halts
 after the first session request
 if it receices any non-ok status code
 except 404,
 and on any non-ok status code
-on its second request
-after receiving 404.
+on a session-renewal request.
+
+## Login and pub/sub
 
 Once session ID, client ID and password are known,
 the client logs in to the verto endpoint,
-sends `verto.subscribe` to the channel
-on successful login,
-and sends its availability to the channel
-via `verto.broadcast`
+subscribe to channel presence events
+on client-ready,
+and publishes its presence status
+to the channel
 on successful subscription
 (and on disconnection).
-
-The client
-provides methods for controllers
-to publish its available/unavailable/absent presence state
-to the channel,
-and provides a method
-for controllers
-to send messages directly to other Clients.
 
 Since they're peer-specific,
 all pub/sub methods
 should probably move to the Peer class.
+
+## Peer-to-peer signal channel
+
+FreeSWITCH notes
+describe how this is implemented
+on the server side.
+
+## Automatic WebSocket reconnection
 
 The Client
 manages WebSocket connection state
@@ -276,10 +275,13 @@ until it retries every 30 seconds,
 also +/- two seconds.
 
 Randomness in the backoff period
-helps stagger the work of handling
+is intended
+to help stagger the work of handling
 connection requests and ping replies
 when FreeSWITCH or the verto endpoint
 restarts with many connected clients.
+
+## WebSocket timeout
 
 All browsers I've tested
 disconnect idle WebSockets
@@ -288,84 +290,48 @@ so the Client sends `echo` messages periodically
 to keep the connection alive.
 
 Some browsers slow or halt timers
-when the page is in a background tab,
-so when the browser runs in the background
+when a page is in a background tab,
+when the browser runs in the background,
 or when the device sleeps,
-it fails to send echo messages
-before the WebSocket times out.
+so the client might fail to send an echo message
+before the browser times out
+and closes its WebSocket.
 
-This happens in Chromium-based browsers on Android,
-but I haven't noticed it
-in desktop systems,
+I've noticed this only
+in Chromium-based browsers on Android,
+but I haven't noticed it otherwise,
 so I assume it's a feature
 intended to preserve battery life.
-It's possible to work around it
-with Web Workers,
-but I haven't done so.
+Clients could echo
+in Web Workers,
+which don't slow/halt timers,
+but since I assume
+that browsers do what they do
+for a reason,
+I haven't done so.
 
 In fact,
 since the client
 reconnects WebSockets on disconnect,
 but timer slowdown stops the echoes
-that keep it alive,
+that keep it connected,
 I've encouraged this behaviour
-by halting reconnect
+by halting WebSocket reconnect
 in situations where the client
-has failed to send echo
+has failed to send an echo message
 before the browser
 disconnects its WebSocket.
 
 The only mitigation I've added
 is to send echo immediately 
 when the window gains focus
-to avoid timing out
+to avoid timeouts
 in situations where
 the phone has gone to sleep
 for a little while
 but the person using it
 wakes it up
-before the WebSocket times out
+before the WebSocket disconnects
 because they're expecting
 or about to make
 a call.
-
-
-# Peer ID
-
-It's the client ID.
-
-I've used variable name `peerId` in the Peer class
-only as a reminder to myself
-that Peer objects support
-only one peer-to-peer WebRTC connection
-at a time.
-
-
-# Signal channel
-
-The peer-to-peer signal channel
-is implemented using the verto endpoint
-`verto.info` `msg` function.
-
-Clients base64-encode message bodies before sending
-and decode upon receipt
-so that the FreeSWITCH `chat` application
-doesn't change them en route.
-
-The verto `msg` function
-generates a `MESSAGE` event
-with `proto` field `verto`
-and `dest_proto` field `GLOBAL`
-and sets the `from_user` field
-to the sender's login username client ID.
-
-FreeSWITCH is configured
-to detect `MESSAGE` events
-(via a simple Lua script)
-and delivers the messages
-to the correct peer
-by executing a `chat` application
-API command
-in the verto protocol
-that sends the `MESSAGE` body
-directly to the target verto user.
