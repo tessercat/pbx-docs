@@ -1,18 +1,3 @@
-# Features
-
-- Reconnects on WebSocket disconnection
-  with randomized backoff on retry.
-- Logs in on WebSocket connection.
-- Subscribes to receive
-  the channel's presence events
-  on client ready.
-- Publishes presence status
-  to the event channel.
-- Negotiates peer-to-peer media connections
-  with other clients 
-  via the verto endpoint.
-
-
 # Index
 
 The index
@@ -48,33 +33,16 @@ library.
     with arbitrary HTML elements.
 - A video element
   scaled horizontally and vertically
+  (with the "contain" object fit style)
   with a black background
-  (using the "contain" object fit style)
   and methods to show and hide it.
 - An activity watcher on the document
   that hides the navbar when a connection is active
   but no mouse or touch activity is detected,
   and unhides the navbar when
   the mouse is moved or the screen touched.
-- A modal dialog
-  and methods
-  to control its visibility
-  and to fill the dialog
-  with arbitrary HTML elements.
-- A modal alert dialog
-  that's dismissable only by its close button
-  and a method to set the alert message
-  and show the alert dialog.
-  The show method
-  stores current modal content
-  and optionally restores it
-  when the alert is dismissed.
-
-The methods that populate
-the navbar and modal dialog
-with arbitrary HTML elements
-couple controllers
-to the Picnic CSS library.
+- Methods to show and hide modal dialogs.
+- A modal alert dialog and methods to show and hide it.
 
 
 # Peer
@@ -83,75 +51,134 @@ The Peer class
 is a controller
 between View and Client classes.
 
-- Handles websocket connect/disconnect events,
-  channel presence events,
-  and peer-to-peer messages
-  received by the Client class
-  via the websocket.
-- Interacts with the view
-  based on input from the Client
-  and sets method callbacks on the View
-  that handle "offer" and "accept" user input.
-- Manages a single Connection object
-  based on Client and View input.
+- Registers callbacks with its Client
+  to handle client socket and session
+  events and messages.
+- Provides a PeersPanel object
+  that manages and displays
+  a peer's list of known peers.
+- Provides an OfferDialog object
+  that manages and displays the status
+  of a peer's single connection offer.
+- Provides an OffersDialog object
+  that manages and displays
+  offers received from other peers.
+
+## Presence protocol
 
 The Peer class
 implements a simple protocol
-to establish a peer connection.
+to share presence information
+between peers.
+
+### Ready
+
+When their client is ready,
+peers subscribe to the client's event channel
+and publishes `ready` to the channel.
+
+### Available
+
+Peers that receive `ready`
+add the other peer
+to their list of known peers
+and send `available`
+directly to the newly subscribed peer
+(as opposed to publishing to the channel).
+
+Peers register a callback
+for client ping events
+and,
+when they are not connected to another peer,
+publish `available`
+to the channel
+with every ping.
+
+Peers that receive `available`
+update their list of known peers
+to track the time the peer was last seen.
+
+Peers detect the absence of other peers
+by removing peers
+from their list of known peers
+(in the ping callback)
+that have not sent `ready` or `available`
+within the past 60 seconds.
+
+### Unavailable
+
+Peers broadcast `unavailable`
+to the channel
+when they successfully
+open (on offer or accept) a connection
+to another peer.
+
+Peers that receive `unavailable`
+remove the peer from their list of known peers.
+
+### Gone
+
+Peers broadcast `gone`
+before they disconnect
+from the channel.
+
+Peers that receive `gone`
+remove the peer from their list of known peers.
+
+## Connection protocol
+
+The Peer class
+implements a simple protocol
+to establish peer connections.
 One peer offers a connection
 and another accepts.
 
-## Offer
+### Offer
 
-To start a new peer connection,
-peers create a Connection object,
-initialize local user media
-(by enumerating and getting local media),
-and send an `offer` message
+To connect to another peer,
+a peer initializes local user media
+and sends an `offer` message
 directly to another peer.
 
-When the offering peer receives `close` in response,
-the offering peer closes its Connection object.
-
 The offering peer
-can rescind its offer
-before the other peer accepts
-by closing its Connection object
-and sending `close` to the other peer.
+registers a callback with its client
+that re-sends `offer` with every ping.
 
-If the offering peer receives `accept` in response,
-the offering peer fully opens the peer connection
-by creating an RTCPeerConnection object,
-attaching Peer handlers to Connection object events
-and adding local media stream tracks
-to the RTCPeerConnection object.
+When the offering peer
+receives `accept` in response,
+it opens its side of the connection.
 
 The offering peer is
 perfect negotiation's
 polite peer.
 
-## Accept
+### Accept
 
-When a peer receives an `offer` message,
-it can ignore the offer
-or send `close`
-to refuse the offer.
+A peer accepts an offer
+by initializing local media,
+sending `accept` to the offering peer,
+and once local media is ready,
+it opens its side of the connection.
 
-The peer accepts an offer
-by creating a Connection object,
-initializing local media,
-sending `accept` to the offering peer
-once local media is ready,
-and opening the connection.
-
-The accepting peer
+The accepting peer is
 perfect negotiation's
 impolite peer.
 
+### Close
+
 Either peer can close the connection
 at any time
-by closing its Connection object
-and sending `close` to the other peer.
+by sending `close` to the other peer
+and closing its own
+initialized or open connection.
+
+### Error
+
+Eiether peer sends `error`
+when it encounters an error condition
+while initializing local media
+or when ICE fails
+when opening the connection.
 
 
 # Connection
@@ -210,9 +237,9 @@ the FreeSWITCH verto endpoint
 JSON-RPC protocol
 and manage its WebSocket transport.
 
-## Session ID
+## Sessions
 
-On connect,
+On WebSocket connect,
 the client generates a per-channel UUID session ID,
 sends the session ID to the service host
 in a separate fetch request
@@ -224,39 +251,61 @@ the client stores the session ID
 in browser `localStorage`.
 
 The service host
-indicates session expiry.
+indicates session expiry
 by sending 404 in reply
 to the auth credential request.
 
-When it receives 404 in reply
-to its first request,
-the client requests new login credentials
-by clearing its current session ID
-and generating and sending a new one.
+The client clears its current session ID
+and tries again once
+when it receives 404 in reply.
 
-The client halts
-after the first session request
-if it receices any non-ok status code
-except 404,
-and on any non-ok status code
-on a session-renewal request.
-
-## Login and pub/sub
+Except for the first session expiry 404,
+the client leaves the channel
+if it receives any non-ok status code.
 
 Once session ID, client ID and password are known,
-the client logs in to the verto endpoint,
-subscribe to channel presence events
-on client-ready,
-and publishes its presence status
-to the channel
-on successful subscription
-(and on disconnection).
+the client logs in to the verto endpoint.
+If login is successful,
+the client receives a ready event
+from the server.
 
-Since they're peer-specific,
-all pub/sub methods
-should probably move to the Peer class.
+FreeSWITCH notes
+describe the details
+of session authentication.
+
+## Pub/sub channels
+
+The Client class
+provides methods
+that allow controllers
+to subscibe to and publish events
+to a client's channel.
+
+To subscribe to the client's channel,
+controllers provide a callback
+that subscribes
+when the client is ready.
+
+Note that
+FreeSWITCH configuration
+must authorize a client to subscribe
+to the client's channel
+or the verto endpoint rejects the subscription.
+
+Disconnecting from the WebSocket
+automatically cleans up subscriptions
+on the server,
+so I haven't bothered to implement
+an unsubscribe method.
 
 ## Peer-to-peer signal channel
+
+The Client class
+provides a method
+that allows controllers
+to send messages
+directly to other peers
+based on client ID.
 
 FreeSWITCH notes
 describe how this is implemented
@@ -269,69 +318,92 @@ manages WebSocket connection state
 by reconnecting immediately
 on WebSocket disconnection,
 but backing off five seconds,
-+/- two seconds,
++/- five seconds,
 on every retry
 until it retries every 30 seconds,
-also +/- two seconds.
+also +/- five seconds.
 
-Randomness in the backoff period
-is intended
-to help stagger the work of handling
-connection requests and ping replies
+## Ping
+
+Browsers time out WebSocket connections
+after 60 seconds of inactivity,
+so the client pings the server
+with a verto protocol echo message
+every 45 seconds +/- five seconds.
+
+Controllers can register a callback
+on client ping
+to execute various operations
+periodically.
+
+## Random retry/ping
+
+Randomness in retry and ping periods
+is intended to help stagger
+the work of handling connection requests
+and ping replies
 when FreeSWITCH or the verto endpoint
 restarts with many connected clients.
 
-## WebSocket timeout
+## Ping timeout
 
-All browsers I've tested
-disconnect idle WebSockets
-after one minute,
-so the Client sends `echo` messages periodically
-to keep the connection alive.
+The client schedules pings with `setTimeout`,
+but some browsers
+(e.g. mobile browsers on battery power)
+slow or halt timers
+when the browser or document
+doesn't have focus,
+or when the phone sleeps.
+To preserve this battery-saving behaviour,
+the client disconnects and/or stops
+the WebSocket from reconnecting
+when it detects a slowed timer.
 
-Some browsers slow or halt timers
-when a page is in a background tab,
-when the browser runs in the background,
-or when the device sleeps,
-so the client might fail to send an echo message
-before the browser times out
-and closes its WebSocket.
+When the WebSocket disconnects,
+the client assumes
+the browser initiated the disconnection
+and stops reconnecting
+if the WebSocket connected
+or last pinged the WebSocket server
+more than 60 seconds ago.
 
-I've noticed this only
-in Chromium-based browsers on Android,
-but I haven't noticed it otherwise,
-so I assume it's a feature
-intended to preserve battery life.
-Clients could echo
-in Web Workers,
-which don't slow/halt timers,
-but since I assume
-that browsers do what they do
-for a reason,
-I haven't done so.
+Since receving messages
+prevents the browser
+from disconnecting the WebSocket,
+to prevent clients on sleeping devices
+from draining the battery,
+and to prevent sleeping clients
+from continually appearing and disappearing
+from the channel
+(from the point of view of other clients),
+the client detects a slowed timer
+on every ping
+and leaves the channel
+if it last pinged the server
+more than 60 seconds ago.
 
-In fact,
-since the client
-reconnects WebSockets on disconnect,
-but timer slowdown stops the echoes
-that keep it connected,
-I've encouraged this behaviour
-by halting WebSocket reconnect
-in situations where the client
-has failed to send an echo message
-before the browser
-disconnects its WebSocket.
+Since the ping timer halts or slows
+on sleeping devices,
+when a device wakes up
+before the slowed timer expires,
+the client disconnects
+when the timer finally runs
+because it's been too long
+since its last ping.
+This can happen some time after
+the device wakes up.
 
-The only mitigation I've added
-is to send echo immediately 
-when the window gains focus
-to avoid timeouts
-in situations where
-the phone has gone to sleep
-for a little while
-but the person using it
-wakes it up
-before the WebSocket disconnects
-because they're expecting
-or about to make
-a call.
+To avoid this,
+the client registers a visibility listener
+on its document
+and pings when the document becomes visible.
+This is not reliable,
+however,
+so the client sometimes disconnects
+when the timer runs
+some time after the device wakes up.
+
+I'm not quite sure
+what to do about this.
+Maybe timing out on ping
+isn't such a good idea.
