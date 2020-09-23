@@ -63,6 +63,8 @@ between View and Client classes.
 - Provides an OffersDialog object
   that manages and displays
   offers received from other peers.
+- Provides a NameDialog object
+  that manages a peer's display name.
 
 ## Presence protocol
 
@@ -367,7 +369,7 @@ if the WebSocket connected
 or last pinged the WebSocket server
 more than 60 seconds ago.
 
-Since receving messages
+Since receiving messages
 prevents the browser
 from disconnecting the WebSocket,
 to prevent clients on sleeping devices
@@ -407,3 +409,65 @@ I'm not quite sure
 what to do about this.
 Maybe timing out on ping
 isn't such a good idea.
+
+
+# Interdependencies between classes
+
+## Client/MyWebSocket dependency injection
+
+Client creates a MyWebSocket object
+and registers this-bound callbacks on socket events.
+
+## Peer as controller
+
+Peer creates a Client object,
+registers this-bound callbacks on the object's events
+and calls the Client object's methods
+to interact with the channel.
+
+Peer creates a View object.
+
+Peer creates buttons, dialogs and panels
+and calls View object methods
+to add and remove their content from the View.
+
+Peer gets css-styled header objects
+from View's `modalHeader` method
+and passes them to dialogs objects
+as constructor arguments.
+
+Peer provides a `displayName` method
+and sets it explicitly on dialog/panel objects
+that need to render display name properties.
+
+Peer registers this-bound callbacks on
+the button, dialog and panel objects it creates
+so the Peer can react to various input actions.
+
+Peer initializes NameDialog
+by calling its `init` method before showing it.
+
+Peer calls NameDialog's `isValid` method
+to validate `peerName` values
+received from the channel in events and messages
+before handling them.
+
+## Modal dialog properties and methods
+
+Peer sets callbacks on properties and methods
+that View looks for in the objects it displays.
+
+- View uses a modal object's `hasModalContent` method
+  to determine whether it should restore the modal object
+  after dismissing an active alert.
+
+- View checks `hasModalContent` on objects passed to `showModal`
+  and shows the modal if the method doesn't exist,
+  but if it does, only if it returns true.
+
+- View fills the modal area with the content of
+  a modal object's `modalContent` property.
+    
+- View registers a listener on the document's keydown event
+  and calls a displayed modal object's `onModalEscape` method
+  when the method exists and the escape key is pressed.
