@@ -1,6 +1,9 @@
-I'm pretty sure
-there are no memory leaks,
-but not 100%.
+I should spend more time
+with the memory profiler
+because I'm no expert.
+
+I'm fairly sure
+there are no memory leaks.
 
 I'm mostly concerned about
 hanging references to requests,
@@ -24,6 +27,8 @@ to make them more visible
 in heap snapshots,
 and I don't see any.
 
-I should probably spend more time
-with the memory profiler
-because I'm no expert.
+I'm also not totally sure that
+the recursive ping setTimout
+doesn't keep growing the stack
+because I've missed a reference somewhere,
+but I'm not sure how to test it.
