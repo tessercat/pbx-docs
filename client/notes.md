@@ -27,10 +27,9 @@ library.
 - A navbar with three items.
   - A brand logo that links to the index page.
   - A status menu item pulled left next to the brand logo
-    and a method to set its text content.
+    and a method to set its content.
   - A menu item pulled right
-    and a method to fill the menu item
-    with arbitrary HTML elements.
+    and a method to set its content.
 - A video element
   scaled horizontally and vertically
   (with the "contain" object fit style)
@@ -54,6 +53,12 @@ between View and Client classes.
 - Registers callbacks with its Client
   to handle client socket and session
   events and messages.
+- Registers callbacks with its Connection
+  to handle connection events.
+- Provides nav status and menu objects
+  that manage and display navbar content.
+- Provides a HelpDialog object
+  that shows basic troubleshooting information.
 - Provides a PeersPanel object
   that manages and displays
   a peer's list of known peers.
@@ -176,7 +181,7 @@ initialized or open connection.
 
 ### Error
 
-Eiether peer sends `error`
+Either peer sends `error`
 when it encounters an error condition
 while initializing local media
 or when ICE fails
@@ -427,7 +432,7 @@ to interact with the channel.
 
 Peer creates a View object.
 
-Peer creates buttons, dialogs and panels
+Peer creates menus, dialogs and panels
 and calls View object methods
 to add and remove their content from the View.
 
@@ -436,13 +441,16 @@ from View's `modalHeader` method
 and passes them to dialogs objects
 as constructor arguments.
 
-Peer provides a `displayName` method
-and sets it explicitly on dialog/panel objects
+Peer provides a `getDisplayName` method
+and sets it explicitly on menu/dialog/panel objects
 that need to render display name properties.
 
 Peer registers this-bound callbacks on
-the button, dialog and panel objects it creates
+the ment, dialog and panel objects it creates
 so the Peer can react to various input actions.
+
+Peer registers callbacks with its Connection object
+before opening connections.
 
 Peer initializes NameDialog
 by calling its `init` method before showing it.
@@ -455,7 +463,8 @@ before handling them.
 ## Modal dialog properties and methods
 
 Peer sets callbacks on properties and methods
-that View looks for in the objects it displays.
+that View looks for in the objects it displays
+in the modal dialog area.
 
 - View uses a modal object's `hasModalContent` method
   to determine whether it should restore the modal object
