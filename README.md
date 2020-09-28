@@ -29,6 +29,6 @@ Other PBX project repos:
 Take note of licenses.
 You can copy and install it
 to your heart's content,
-but you can't modify it
-and you can't make money from it
+but you can't modify
+or make money from it
 without my consent.
