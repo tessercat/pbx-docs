@@ -48,28 +48,27 @@ library.
 
 The Peer class
 is a controller
-between View and Client classes.
+between View,
+Client
+and Connection
+classes.
 
-- Registers callbacks with its Client
-  to handle client socket and session
-  events and messages.
-- Registers callbacks with its Connection
-  to handle connection events.
-- Provides nav status and menu objects
-  that manage and display navbar content.
-- Provides a HelpDialog object
-  that shows basic troubleshooting information.
-- Provides a PeersPanel object
-  that manages and displays
-  a peer's list of known peers.
-- Provides an OfferDialog object
-  that manages and displays the status
-  of a peer's single connection offer.
-- Provides an OffersDialog object
-  that manages and displays
-  offers received from other peers.
-- Provides a NameDialog object
-  that manages a peer's display name.
+- Creates a Client object
+  to interact with the channel.
+- Creates a Connection object
+  to manage connection negotiation.
+- Creates NavStatus and NavMenu objects
+  to manage and display navbar content.
+- Creates a NameDialog object
+  to manage peer display name.
+- Creates a HelpDialog object
+  to display basic troubleshooting information.
+- Creates a PeersPanel object
+  to manage and display known peers.
+- Creates an OfferDialog object
+  to manage and display the status of a peer's Connection offer.
+- Creates an OffersDialog object
+  to manage and display offers received from other peers.
 
 ## Presence protocol
 
@@ -82,7 +81,7 @@ between peers.
 
 When their client is ready,
 peers subscribe to the client's event channel
-and publishes `ready` to the channel.
+and publish `ready` to the channel.
 
 ### Available
 
@@ -94,7 +93,7 @@ directly to the newly subscribed peer
 (as opposed to publishing to the channel).
 
 Peers register a callback
-for client ping events
+on client ping events
 and,
 when they are not connected to another peer,
 publish `available`
@@ -148,7 +147,7 @@ and sends an `offer` message
 directly to another peer.
 
 The offering peer
-registers a callback with its client
+registers a callback on its client
 that re-sends `offer` with every ping.
 
 When the offering peer
@@ -295,9 +294,9 @@ when the client is ready.
 
 Note that
 FreeSWITCH configuration
-must authorize a client to subscribe
-to the client's channel
-or the verto endpoint rejects the subscription.
+must authorize a client
+to subscribe and publish
+to the client's channel.
 
 Disconnecting from the WebSocket
 automatically cleans up subscriptions
@@ -449,7 +448,7 @@ Peer registers this-bound callbacks on
 the ment, dialog and panel objects it creates
 so the Peer can react to various input actions.
 
-Peer registers callbacks with its Connection object
+Peer registers callbacks on its Connection object
 before opening connections.
 
 Peer initializes NameDialog
