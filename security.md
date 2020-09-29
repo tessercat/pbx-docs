@@ -91,7 +91,7 @@ so the system should offer
 no potential for XSS injection.
 
 
-# Cross-channel peer-to-peer messages
+# Peer-to-peer info messages
 
 FreeSWITCH is configured
 to run a hook script
@@ -99,8 +99,40 @@ to relay `verto.info` `msg` protocol messages
 to any logged-in verto client
 without validating channel membership.
 
-Therefore,
-it's possible for clients
+Directory config
+must allow clients to send info messages.
+
+To send a message to another peer,
+the client sends a Base64-encoded JSON object
+to the login ID of a logged-in verto user.
+
+The hook script
+receives messages as `MESSAGE` events
+and sends verto protocol chat messages
+to the addressed user,
+but from the login ID of the sender
+extracted from event headers.
+
+The verto chat app
+filters messages to bad recipients
+and logged-out clients,
+and the hook script
+affords sending clients
+no opportunity to forge
+the `from` address,
+so I'm pretty sure it's safe
+for peers to trust
+that messages are actually from
+the peer they say they're from. 
+
+
+# Cross-channel peer-to-peer messages
+
+The fact that the info msg hook script
+sends messages to any logged-in verto client
+(without considering channel membership)
+means it's possible for clients
+(with permission to send info messages)
 to send peer-to-peer messages
 to clients in other channels.
 
