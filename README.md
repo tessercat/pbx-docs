@@ -32,8 +32,4 @@ Other PBX project repos:
   Ansible pull-mode Python/git environment
 
 Take note of licenses.
-You can copy and install it
-to your heart's content,
-but you can't modify
-or make money from it
-without my consent.
+This is not an open source project.
