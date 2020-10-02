@@ -112,21 +112,14 @@ and published ready.
 
 NavMenu options are:
 - Close
-- Select audio input device
-- Select audio output device
-- Select video input source
+- Select media
 - Share file
 - Help
 
-Audio options
-are options lists
-of the input/output devices
-available to the browser.
-
-Video input source
-is an options list
-of available cameras
-and sharable browser/window/desktop sources
+Media selection
+is a dialog box
+of options lists
+to select input/output devices/sources
 available to the browser.
 
 File sharing
