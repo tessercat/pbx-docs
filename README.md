@@ -21,9 +21,9 @@ on a Debian 10 host.
 Other PBX project repos:
 
 - [pbx-web](https://github.com/tessercat/pbx-web)
-  Django project web and and FreeSWITCH configuration services
+  Django project web and FreeSWITCH configuration services
 - [pbx-client](https://github.com/tessercat/pbx-client)
-  FreeSWITCH verto protocol JSON-RPC client and npm build environment
+  FreeSWITCH verto module JSON-RPC client and npm build environment
 - [pbx-amd64](https://github.com/tessercat/pbx-amd64)
   Debian 10 amd64 FreeSWITCH binaries
 - [pbx-deploy](https://github.com/tessercat/pbx-deploy)
