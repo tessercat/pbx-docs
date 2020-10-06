@@ -66,7 +66,7 @@ classes.
 - Creates a PeersPanel object
   to manage and display known peers.
 - Creates an OfferDialog object
-  to manage and display the status of a peer's Connection offer.
+  to manage and display a single Connection offer.
 - Creates an OffersDialog object
   to manage and display offers received from other peers.
 
@@ -426,7 +426,7 @@ and registers this-bound callbacks on socket events.
 
 Peer creates a Client object,
 registers this-bound callbacks on the object's events
-and calls the Client object's methods
+and calls the Client object's interface methods
 to interact with the channel.
 
 Peer creates a View object.
@@ -435,31 +435,85 @@ Peer creates menus, dialogs and panels
 and calls View object methods
 to add and remove their content from the View.
 
-Peer gets css-styled header objects
-from View's `modalHeader` method
-and passes them to dialogs objects
-as constructor arguments.
-
-Peer provides a `getDisplayName` method
-and sets it explicitly on menu/dialog/panel objects
-that need to render display name properties.
+Peer provides `getFullName` and `getDisplayName` methods
+and makes them available
+to view objects
+that render peer names dynamically.
 
 Peer registers this-bound callbacks on
-the ment, dialog and panel objects it creates
+its view objects
 so the Peer can react to various input actions.
 
 Peer registers callbacks on its Connection object
 before opening connections.
 
-Peer initializes NameDialog
-by calling its `init` method before showing it.
+## NameDialog as peer name validator
 
-Peer calls NameDialog's `isValid` method
-to validate `peerName` values
-received from the channel in events and messages
-before handling them.
+NameDialog provides
+state methods that Peer uses
+to initialize its own name
+and to validate the names 
+it receives from the channel.
 
-## Modal dialog properties and methods
+Once initialized,
+a NameDialog object's `peerName` property
+contains validated data,
+and Peer refers to the property
+when it needs to display or send
+its own name.
+
+## NavStatus and NavMenu state
+
+NavStatus and NavMenu
+both provide a `menu` property,
+a list of HTML elements to display
+in their respective View element
+depending on state.
+
+Peer sets nav object state as state changes,
+and places current nav object `menu` elements
+in the view.
+
+## PeersPanel and OffersDialog 
+
+PeersPanel and OffersDialog
+both keep dicts of HTML elements,
+indexed by client ID,
+that represent other peers in the channel,
+and that Peer uses
+to populate View elements.
+
+Peer initializes,
+updates
+and removes
+PeersPanel and OffersDialog
+peer elements and properties
+as it receives messages
+from the channel,
+and when it detects
+peer activity timeout.
+
+## OfferDialog identity and state
+
+Peer initializes its OfferDialog object
+with the other peer's client ID and name
+when it makes an offer.
+
+Peer sets OfferDialog state
+as connection/client state changes.
+
+Peer uses OfferDialog methods
+to validate peer names
+in messages it receives
+from the channel.
+
+## View modal properties and methods
+
+View provides a `modalHeader` method
+that returns a view-comptible modal header.
+
+Peer passes headers to dialogs
+as constructor args.
 
 Peer sets callbacks on properties and methods
 that View looks for in the objects it displays
@@ -479,3 +533,7 @@ in the modal dialog area.
 - View registers a listener on the document's keydown event
   and calls a displayed modal object's `onModalEscape` method
   when the method exists and the escape key is pressed.
+
+- If one exists,
+  View runs a modal object's `onModalVisible` method
+  immediately after showing the dialog.
