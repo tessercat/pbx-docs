@@ -57,6 +57,8 @@ classes.
   to interact with the channel.
 - Creates a Connection object
   to manage connection negotiation.
+- Creates a LocalMedia object
+  to manage local media streams.
 - Creates NavStatus and NavMenu objects
   to manage and display navbar content.
 - Creates a NameDialog object
@@ -65,8 +67,6 @@ classes.
   to display basic troubleshooting information.
 - Creates a PeersPanel object
   to manage and display known peers.
-- Creates an OfferDialog object
-  to manage and display a single Connection offer.
 - Creates an OffersDialog object
   to manage and display offers received from other peers.
 
@@ -435,7 +435,7 @@ Peer creates menus, dialogs and panels
 and calls View object methods
 to add and remove their content from the View.
 
-Peer provides `getFullName` and `getDisplayName` methods
+Peer provides `getFullName` and `getDisplayName` class methods
 and makes them available
 to view objects
 that render peer names dynamically.
@@ -450,7 +450,7 @@ before opening connections.
 ## NameDialog as peer name validator
 
 NameDialog provides
-state methods that Peer uses
+class methods that Peer uses
 to initialize its own name
 and to validate the names 
 it receives from the channel.
@@ -476,6 +476,11 @@ in the view.
 
 ## PeersPanel and OffersDialog 
 
+Peer sets an `isOffering` property
+on its Connection object
+and uses it
+to manage connection state.
+
 PeersPanel and OffersDialog
 both keep dicts of HTML elements,
 indexed by client ID,
@@ -492,20 +497,6 @@ as it receives messages
 from the channel,
 and when it detects
 peer activity timeout.
-
-## OfferDialog identity and state
-
-Peer initializes its OfferDialog object
-with the other peer's client ID and name
-when it makes an offer.
-
-Peer sets OfferDialog state
-as connection/client state changes.
-
-Peer uses OfferDialog methods
-to validate peer names
-in messages it receives
-from the channel.
 
 ## View modal properties and methods
 
@@ -537,3 +528,9 @@ in the modal dialog area.
 - If one exists,
   View runs a modal object's `onModalVisible` method
   immediately after showing the dialog.
+
+- View enables the modal control checkbox
+  when the modal object's `enableModalControl` property
+  exists and is truthy.
+  The checkbox is disabled by default,
+  and allows the modal to be more easily dismissed.
