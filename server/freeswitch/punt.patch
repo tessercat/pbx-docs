@@ -1,5 +1,14 @@
+From 8662d1a80567eac9f819912bc97c847cb189c370 Mon Sep 17 00:00:00 2001
+From: Peter Christensen <tessercat@redacted.net>
+Date: Wed, 31 Mar 2021 20:16:18 +0000
+Subject: [PATCH] Verto punt updates.
+
+---
+ src/mod/endpoints/mod_verto/mod_verto.c | 33 +++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
 diff --git a/src/mod/endpoints/mod_verto/mod_verto.c b/src/mod/endpoints/mod_verto/mod_verto.c
-index 342ed8b..1b08317 100644
+index 342ed8b26e..f80fae1162 100644
 --- a/src/mod/endpoints/mod_verto/mod_verto.c
 +++ b/src/mod/endpoints/mod_verto/mod_verto.c
 @@ -893,6 +893,7 @@ static switch_bool_t check_auth(jsock_t *jsock, cJSON *params, int *code, char *
@@ -31,7 +40,7 @@ index 342ed8b..1b08317 100644
  
  	if (!strcmp(login, "root") && jsock->profile->root_passwd) {
  		if (!(r = !strcmp(passwd, jsock->profile->root_passwd))) {
-@@ -5176,7 +5184,30 @@ SWITCH_STANDARD_API(verto_function)
+@@ -5176,6 +5184,30 @@ SWITCH_STANDARD_API(verto_function)
  
  }
  
@@ -41,7 +50,7 @@ index 342ed8b..1b08317 100644
 +	jsock_t *jsock;
 +
 +	switch_mutex_lock(verto_globals.jsock_mutex);
- 
++
 +	if ((jsock = switch_core_hash_find(verto_globals.jsock_hash, sessid))) {
 +		cJSON *params = NULL;
 +		cJSON *msg = NULL;
@@ -60,9 +69,9 @@ index 342ed8b..1b08317 100644
 +	return SWITCH_STATUS_SUCCESS;
 +}
  
+ 
  static void *SWITCH_THREAD_FUNC profile_thread(switch_thread_t *thread, void *obj)
- {
-@@ -6201,6 +6232,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_verto_load)
+@@ -6201,6 +6233,7 @@ SWITCH_MODULE_LOAD_FUNCTION(mod_verto_load)
  
  	SWITCH_ADD_API(api_interface, "verto", "Verto API", verto_function, "syntax");
  	SWITCH_ADD_API(api_interface, "verto_contact", "Generate a verto endpoint dialstring", verto_contact_function, "user@domain");
@@ -70,3 +79,6 @@ index 342ed8b..1b08317 100644
  	switch_console_set_complete("add verto help");
  	switch_console_set_complete("add verto status");
  	switch_console_set_complete("add verto xmlstatus");
+-- 
+2.20.1
+
