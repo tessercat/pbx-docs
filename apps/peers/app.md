@@ -1,6 +1,4 @@
-Security notes for the pbx project.
-
-# Peers client/app security overview
+# Peers client/app
 
 Clients must know a valid
 per-channel login username (client ID) and password
