@@ -1,4 +1,9 @@
-# Django project notes
+# FreeSWITCH configuration
+
+The Django project
+provides the `/fsapi` endpoint
+as a target for
+FreeSWITCH's `mod_xml_curl` module.
 
 
 ## Deployment
@@ -6,7 +11,7 @@
 Systemd runs the project
 in daphne
 on a localhost port
-in a project-specific venv.
+(in a project-specific venv).
 
 An nginx server named `{{ hostname }}`
 listens on the public TLS port
@@ -22,7 +27,7 @@ to the project
 via the daphne port.
 
 Project settings allow requests
-from both `{{ hostname }}` and `localhost`.
+to both `{{ hostname }}` and `localhost`.
 
 
 ## Protected paths
@@ -33,7 +38,7 @@ the `common` app
 provides a registry and middleware
 to reject requests to registered `url_name` strings
 unless the request was made
-via the `localhost` nginx server.
+to the `localhost` nginx server.
 
 Other apps
 implement a `protected_paths.py` module
@@ -58,53 +63,48 @@ The `fsapi`  app
 registers the '/fsapi' endpoint's `url_name`
 in the protected paths registry.
 
-
-## FreeSWITCH request handling
-
-The `fsapi` app provides
-the localhost-only `/fsapi` endpoint
-to handle requests
-sent by FreeSWITCH's `mod_xml_curl` module.
+## CSRF
 
 Django CSRF protection
 is disabled on the `/fsapi` endpoint.
 
 It's probably possible to configure `mod_xml_curl`
 to use cookies
-and enable CSRF protection for the endpoint,
+and enable CSRF protection on the endpoint,
 but since the endpoint is accessible
 only on localhost,
 I haven't bothered to do so.
 
-The project handles FreeSWITCH `mod_conf_xml` requests
-by processing requests using
+
+## Request handlers
+
+The project handles requests
+by processing them using
 app-specific
 auto-discovered
-registries of request handler objects
-defined in project settings.
+registries of request handler objects.
 
 ### 404
 
-The `fsapi` app provides
-a custom 404 method
-that returns
-a FreeSWITCH XML fragment.
+The `/fsapi` view
+returns a FreeSWITCH XML fragment
+when the/handlers raise 404
+instead of the default.
 
-The `common` app default 404 handler
-detects the custom 404 method
+The view attaches a custom 404 handler
+to every request
+that returns a FreeSWITCH XML fragment.
+
+The default `common` app 404 handler
+detects the custom handler
 and returns its result
 instead of the default HTML 404 response.
-
-The `/fsapi` view
-returns this 404 fragment
-when a request handler
-raises (an unhandled) Django `Http404`.
 
 ### Fsapi base
 
 The `fsapi` app
-populates a project settings registry
-of FsapiHandler objects.
+declares an FsapiHandler abstract class
+and a registry of FsapiHandler objects.
 
 Other apps
 implement and register FsapiHandler subclasses
@@ -130,69 +130,60 @@ of the first handler with matching fields,
 or raises 404 if no handler matches.
 
 The `fsapi` view
-doesn't catch exceptions.
+doesn't catch exceptions,
+so the first handler-raised 404 
+stops processing of a request
+by the registry's handlers.
 
-### Directory and dialplan
+### Configuration, directory and dialplan apps
 
-The `directory` and `dialplan` apps
+The `configuration`, `directory` and `dialplan` apps
 add FsapiHandlers that match
-*all* directory/diaplan requests
-and pass these requests on to
-DirectoryHandler/DialplanHandler objects
-that other apps register
-(in `directory.py` and `dialplan.py` modules.
+configuration/directory/diaplan requests
+based on POST data.
 
-The `directory` and `dialplan` apps auto-discover app modules
-and populate their respective registry on app ready.
+All three apps implement FsapiHandler subclasses
+and register handler objects
+(in `fsapi.py` modules)
+that inspect the `section` field
+of FreeSWITCH POST requests.
 
-Directory/diaplan registries are arrays,
-and handlers are added to registries
-in Django module load order.
+All three apps also provide
+registries of their own
+that other apps use
+to handle requests for specific
+endpoints and applications.
 
-The directory/dialplan FsapiHandlers
-return template/context
-from the first sub-handler that doesn't raise 404,
-but continue to process other sub-handlers
-when they encounter 404.
+Configuration/directory/diaplan registries
+are dicts that map POST data to registered handlers.
 
-### Verto directory and diaplan
+The `configuration` app
+provides a dict registry
+that maps configuration section requests
+to registry handlers by `key_value` POST data.
 
-The `verto` app
-implements and registers directory/diaplan handler subclasses
-(in `directory.py` and `dialplan.py`).
+The `directory` app
+provides a dict registry
+that maps directory section requests
+to registry handlers by `domain` POST data.
 
-Verto directory/dialplan handlers
-retrieve a verto Client object
-based on POST data
-or raise 404
-when no Client object is found.
-
-The `verto` app
-provides registries and base classes
-for other apps
-to implement and register
-verto-specific directory/diaplan handlers
-(in an app's `verto.py` module).
-
-Verto directory/diaplan registries are dicts,
-and `verto` app request handlers
-retrieve a sub-handler
-(from their directory/dialplan registry)
-based on the `realm` field
-of the verto Client's Channel object.
+The `dialplan` app
+provides a registry
+that maps dialplan section requests
+to registry handlers by `Caller-Context` POST data.
 
 Other apps
-register their verto directory/diaplan handlers
-in the `verto` app's registry dicts
-with the Channel-specific realm key.
+implement ConfigurationHandler,
+DirectoryHandler
+and DialplanHandler classes
+and add them to the respective registry
+in `configuration.py`,
+`directory.py`
+and `dialplan.py` modules.
 
-### Conference directory and dialplan
-
-The `conference` app
-implements and registers verto directory/diaplan subclasses
-(in `verto.py`)
-that return verto-specific
-templates and contexts.
+The configuration/directory/dialplan apps
+auto-discover app modules
+and populate their respective registry on app ready.
 
 
 ## Verto punt API command
