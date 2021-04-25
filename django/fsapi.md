@@ -3,7 +3,7 @@
 The Django project
 provides the `/fsapi` endpoint
 as a target for
-FreeSWITCH's `mod_xml_curl` module.
+FreeSWITCH's `mod_xml_curl`.
 
 
 ## Deployment
@@ -52,7 +52,7 @@ to scrape `/metrics`
 from the `localhost` nginx server.
 
 The `common` app
-registers the '/metrics' endpoint's `url_name`
+registers the `/metrics` endpoint's `url_name`
 in the protected paths registry.
 
 FreeSWITCH `mod_xml_curl` is configured
@@ -60,7 +60,7 @@ to send requests to `/fsapi`
 on the `localhost` nginx server,
 
 The `fsapi`  app
-registers the '/fsapi' endpoint's `url_name`
+registers the `/fsapi` endpoint's `url_name`
 in the protected paths registry.
 
 ## CSRF
@@ -88,15 +88,14 @@ registries of request handler objects.
 
 The `/fsapi` view
 returns a FreeSWITCH XML fragment
-when the/handlers raise 404
-instead of the default.
-
-The view attaches a custom 404 handler
+when handlers raise 404
+instead of the default
+by adding a custom 404 handler method
 to every request
 that returns a FreeSWITCH XML fragment.
 
 The default `common` app 404 handler
-detects the custom handler
+detects the custom attribute
 and returns its result
 instead of the default HTML 404 response.
 
@@ -114,7 +113,7 @@ The `fsapi` app auto-discovers these modules
 and populates its registry on app ready.
 
 The `fsapi` registry is an array,
-and handlers are added to the registry
+and apps add handlers to the registry
 in Django module load order.
 
 FsapiHandler subclasses
@@ -124,58 +123,41 @@ and implement FsapiHandler's abstract `process` method.
 
 The `fsapi` view
 matches a request's POST data
-against each handler's required field,
+against each handler's required fields,
 and runs the `process` method
 of the first handler with matching fields,
 or raises 404 if no handler matches.
-
-The `fsapi` view
-doesn't catch exceptions,
-so the first handler-raised 404 
-stops processing of a request
-by the registry's handlers.
 
 ### Configuration, directory and dialplan apps
 
 The `configuration`, `directory` and `dialplan` apps
 add FsapiHandlers that match
-configuration/directory/diaplan requests
-based on POST data.
+POST data `section` fields.
 
-All three apps implement FsapiHandler subclasses
-and register handler objects
-(in `fsapi.py` modules)
-that inspect the `section` field
-of FreeSWITCH POST requests.
-
-All three apps also provide
-registries of their own
+All three apps provide
+their own registries
 that other apps use
-to handle requests for specific
-endpoints and applications.
+to register handlers for
+endpoint- and application-specific requests.
 
 Configuration/directory/diaplan registries
-are dicts that map POST data to registered handlers.
+are dicts that map a single POST data field
+to a registered handler.
 
 The `configuration` app
 provides a dict registry
 that maps configuration section requests
-to registry handlers by `key_value` POST data.
-
-The `directory` app
-provides a dict registry
-that maps directory section requests
-to registry handlers by `domain` POST data.
-
-The `dialplan` app
-provides a registry
-that maps dialplan section requests
-to registry handlers by `Caller-Context` POST data.
+to registry handlers by `key_value` POST data,
+the `directory` app
+registers handlers by `domain`,
+and the `dialplan` app
+registers handlers by `Caller-Context`.
 
 Other apps
 implement ConfigurationHandler,
 DirectoryHandler
 and DialplanHandler classes
+(defined in app-specific `registries.py` modules)
 and add them to the respective registry
 in `configuration.py`,
 `directory.py`
@@ -191,7 +173,6 @@ and populate their respective registry on app ready.
 I've slightly modified
 the verto module
 in the FreeSWITCH binaries
-used in the project
 to require a non-empty session ID on login
 and to provide a `verto_punt` API command
 that can be used
@@ -229,7 +210,7 @@ on successful client login events
 and on all client disconnect events.
 
 The `channels` app
-registers handlers for the events.
+registers FsapiHandler objects for the events.
 
 The client login handler
 queries a Client object
