@@ -78,6 +78,13 @@ From
     cd freeswitch
     git log
 
+## Apply verto patch
+
+    wget https://raw.githubusercontent.com/tessercat/pbx-docs/dev/freeswitch/punt.patch
+    git config user.email "you@example.com"
+    git config user.name "Your Name"
+    git am punt.patch
+
 ## Compile and install
 
     cp /opt/pbx/freeswitch/conf/modules.conf .
