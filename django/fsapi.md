@@ -63,6 +63,7 @@ The `fsapi`  app
 registers the `/fsapi` endpoint's `url_name`
 in the protected paths registry.
 
+
 ## CSRF
 
 Django CSRF protection
@@ -157,7 +158,6 @@ Other apps
 implement ConfigurationHandler,
 DirectoryHandler
 and DialplanHandler classes
-(defined in app-specific `registries.py` modules)
 and add them to the respective registry
 in `configuration.py`,
 `directory.py`
