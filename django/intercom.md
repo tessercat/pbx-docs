@@ -6,7 +6,8 @@ Extension numbers are unique per Intercom.
 Extensions have a "web-enabled" boolean field,
 and the app registers signal handlers
 to add/remove an optional, hidden
-verto Channel field to/from Extensions on save.
+verto Channel field
+to/from Extensions on save.
 
 An extension Action
 is an XML dialplan template
@@ -26,24 +27,26 @@ on app ready,
 and the Extension model
 provides a `get_action` method
 that returns the Extension's
-subclassed Action object.
+subclassed Action object
+by comparing Extension attributes
+against enumerated Action subclasses.
 
 Dialplan handlers
-process an action object's dialplan template
-with data from subclasssed object's fields.
+process an Action object's dialplan template
+with data from the object's fields.
 
 The intercom app implements
 only one Action subclass, the Bridge.
 
-(Eventually I'd like to add
+Eventually I might add
 apps/Actions to handle
 Conference,
 Record,
 Playback
-and VoiceMail
+and Voicemail
 (and maybe IVR)
 diaplan actions/applications
-as well.)
+as well.
 
 OutboundExtensions are
 a combined extension/action
@@ -61,8 +64,8 @@ and OutboundExtensions.
 
 OutboundCallerIds are
 a name and a phone number,
-that OutboundExtensions and OutsideLines
-send 
+and OutboundExtensions and OutsideLines
+have OutboundCallerId fields. 
 
 Like Lines,
 OutsideLines reference Bridges.
@@ -78,16 +81,50 @@ that reference the Bridge.
 When the diaplan recieves a call
 that doesn't exactly match
 a particular Extension number,
-it matches the destination number
-against the calling Line's OutboundExtension expressions,
-and if one matches,
-calls the expression's `$1` group match.
+it first queries InboundTransfers
+for the dialed number
+and transfers the call
+if one is found.
+
+If the dialed number
+matches neither an Extension
+nor an InboundTransfer,
+it searches the calling Line's OutboundExtensions
+for a match,
+and if it finds one,
+calls the matched phone number.
 
 Lines without OutboundExtensions
 can call OutsideLines
 through Bridge Extensions,
 but can't call
 through Gateways otherwise.
+
+The intercom app
+adds Gateway objects
+to its `intercom_settings` dict
+(in an array ordered by Gateway priority)
+on app ready.
+
+The intercom models module
+provides a method
+that returns a dialstring
+that lists high priority Gateways first
+and fails over to lower priority Gateways.
+
+Intercom `templatetag` modules
+provide tag methods
+for Bridge and OutboundExtension templates
+that generate dialstrings
+from the models module dialstring method.
+
+(Failover for 
+OutboundExtension and OutsideLine calls
+is accomplished by
+adding one dialstring per Gateway
+(joined by the bridge application's `|` operator)
+to each outbound leg
+in Gateway `priority` field order.)
 
 Lines
 OutboundExtensions,
@@ -117,14 +154,6 @@ the dialplan presents the Line's caller ID
 to the ITSP,
 overriding the OutboundExtension/OutsideLine's
 default caller ID.
-
-Failover for 
-OutboundExtension and OutsideLine calls
-is accomplished by
-adding one dialstring per Gateway
-(joined by the bridge application's `|` operator)
-to each outbound leg
-in Gateway `priority` field order.
 
 TODO
 Implement and explain

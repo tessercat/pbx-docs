@@ -114,6 +114,3 @@ TLS and inbound SRTP.
 Channel variables 
 set in the dialplan
 require outbound SRTP.
-
-TODO
-Explain Gateway dialstrings.
