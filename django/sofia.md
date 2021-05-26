@@ -3,8 +3,16 @@ are defined in
 dict-literal `var/sofia.py`.
 
 The dict-literal
-defines intercom slugs and ports
-and gateway slugs, ports and registration data.
+defines intercom
+slugs and ports
+and gateway slugs,
+ports,
+priorities
+and registration data.
+
+Intercoms and gateways
+are Django ORM objects,
+but they're not dynamic.
 
 The sofia app's
 `importprofiles` management command
@@ -12,6 +20,13 @@ reads the dict-literal configuration files
 and creates `sofia.Intercom` and `sofia.Gateway`
 model objects
 based on the data.
+
+The sofia app's admin module
+sets intercom and gateway objects
+as read-only to all users.
+
+The sofia app
+registers for sofia module configuration requests.
 
 Sofia intercom profiles
 require authentication
@@ -47,7 +62,3 @@ TLS and inbound SRTP.
 Channel variables 
 set in the dialplan
 require outbound SRTP.
-
-The sofia app's admin module
-sets intercom and gateway objects
-as read-only to all users.
