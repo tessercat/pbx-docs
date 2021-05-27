@@ -8,6 +8,10 @@ and Ansible roles
 to install the service
 on a Debian 10 host.
 
+- TLS/SRTP SIP intercom profiles, lines and extensions
+- WebRTC profiles, web client and extensions
+- Redundant TLS/SRTP voip.ms SIP gateways
+
 Other PBX project repos:
 
 - [pbx-web](https://github.com/tessercat/pbx-web)
